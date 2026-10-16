@@ -1,0 +1,259 @@
+/* About Page Redesign Styles */
+
+.about-hero {
+  min-height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--navy), #1C2541);
+  text-align: center;
+}
+
+.intro-section {
+  background-color: white;
+}
+
+.intro-text-highlight {
+  border-left: 4px solid var(--gold);
+  padding-left: 1.5rem;
+}
+
+/* Who We Are & Specialities */
+.specialities-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .specialities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .specialities-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.speciality-card {
+  background: var(--glacial);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.speciality-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border-color: var(--gold);
+}
+
+/* What We Do */
+.what-we-do-card {
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  border-top: 4px solid var(--navy);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.what-we-do-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Values Interactive Section */
+.values-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .values-container {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+
+.values-wheel-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 450px;
+  height: 450px;
+  margin: 0 auto;
+}
+
+/* Radial Wheel graphic positioning */
+.wheel-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.15));
+}
+
+.wheel-segment-path {
+  transition: opacity 0.3s ease, stroke-width 0.3s ease;
+  cursor: pointer;
+}
+
+.wheel-segment-path:hover, .wheel-segment-path.active {
+  stroke-width: 36px;
+  opacity: 1;
+}
+
+.wheel-segment-path.inactive {
+  opacity: 0.5;
+}
+
+/* Interactive Center Circle of Core Values */
+.wheel-center-circle {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.wheel-center-circle:hover {
+  filter: brightness(1.05);
+}
+
+/* Outer node buttons containing icons */
+.wheel-node {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+  border: 2px solid transparent;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.wheel-node:hover, .wheel-node.active {
+  transform: translate(-50%, -50%) scale(1.2) !important;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  z-index: 25;
+}
+
+.wheel-node-label {
+  position: absolute;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--navy);
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0.7;
+  transition: opacity 0.3s, font-size 0.3s;
+}
+
+.wheel-node.active + .wheel-node-label, .wheel-node:hover + .wheel-node-label {
+  opacity: 1;
+  font-size: 0.8rem;
+}
+
+/* Details Panel next to the wheel */
+.value-details-panel {
+  background: white;
+  padding: 3rem 2.5rem;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.value-details-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background-color: var(--active-color, var(--navy));
+  transition: background-color 0.3s ease;
+}
+
+.value-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  width: fit-content;
+  margin-bottom: 1.5rem;
+}
+
+/* Mobile values fallback */
+.mobile-values-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.mobile-value-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  border-left: 4px solid var(--value-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.mobile-value-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Purpose Vision Mission boxes */
+.purpose-box {
+  background: var(--glacial);
+  border-radius: 20px;
+  padding: 2.5rem;
+  transition: all 0.3s ease;
+  border-top: 4px solid var(--navy);
+}
+
+.purpose-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.purpose-box.border-gold {
+  border-top-color: var(--gold);
+}
+
+.purpose-box.border-turquoise {
+  border-top-color: var(--turquoise);
+}
+
+.purpose-box.border-blue {
+  border-top-color: var(--blue);
+}

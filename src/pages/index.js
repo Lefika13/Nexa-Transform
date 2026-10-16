@@ -1,0 +1,27 @@
+export { Home } from './Home';
+export { About } from './About';
+export { Services } from './Services';
+export { TrainingAcademy } from './TrainingAcademy';
+export { InnovationLab } from './InnovationLab';
+export { Ecosystem } from './Ecosystem';
+export { Resources } from './Resources';
+export { Insights } from './Insights';
+export { Contact } from './Contact';
+export { Admin } from './Admin';
+export { DeveloperDashboard } from './DeveloperDashboard';
+export { LearnerPortal } from './LearnerPortal';
+export { LecturerPortal } from './LecturerPortal';
+export { LecturerRegistration } from './LecturerRegistration';
+export { AdminPortal } from './AdminPortal';
+export { LmisPortal } from './LmisPortal';
+export { ModuleDetail } from './ModuleDetail';
+export { PrivacyPolicy } from './PrivacyPolicy';
+export { TermsOfService } from './TermsOfService';
+export { SchoolPortal } from './SchoolPortal';
+export { SchoolsShowcase } from './SchoolsShowcase';
+export { SchoolLmisHub } from './SchoolLmisHub';
+export { SchoolAdminPortal } from './SchoolAdminPortal';
+export { SchoolTeacherPortal } from './SchoolTeacherPortal';
+export { SchoolStudentPortal } from './SchoolStudentPortal';
+export { SaReportCard } from './SaReportCard';
+

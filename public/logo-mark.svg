@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <!-- Metallic Silver Gradient for the N -->
+    <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8A95A5" />
+      <stop offset="25%" stop-color="#CFD6DF" />
+      <stop offset="50%" stop-color="#FFFFFF" />
+      <stop offset="75%" stop-color="#B0B9C6" />
+      <stop offset="100%" stop-color="#5C6470" />
+    </linearGradient>
+    
+    <!-- Metallic Gold Gradient for the X -->
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9A7B1C" />
+      <stop offset="25%" stop-color="#FCD34D" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="75%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#78350F" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Background Circle -->
+  <circle cx="60" cy="60" r="56" fill="#0B132B" />
+
+  <!-- Gold X (Drawn first so it sits behind the silver N overlap) -->
+  <!-- Gold Slash (/) -->
+  <polygon points="77,25 92,25 52,95 37,95" fill="url(#gold-grad)" />
+  <!-- Gold Backslash (\) -->
+  <polygon points="60,25 75,25 105,95 90,95" fill="url(#gold-grad)" />
+
+  <!-- Silver N -->
+  <!-- Silver Left Pillar -->
+  <rect x="15" y="25" width="15" height="70" fill="url(#silver-grad)" />
+  <!-- Silver Diagonal -->
+  <polygon points="15,25 30,25 60,95 45,95" fill="url(#silver-grad)" />
+</svg>

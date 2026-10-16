@@ -1,0 +1,133 @@
+/* src/components/shared/ModuleHeroDiagram.css */
+
+.hero-diagram {
+  background: rgba(11, 19, 43, 0.85);
+  border: 1.5px solid rgba(6, 182, 212, 0.3);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 30px rgba(6, 182, 212, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.hero-diagram:hover {
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(6, 182, 212, 0.25);
+}
+
+.hero-diagram::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #06B6D4, #10B981, transparent);
+}
+
+.diagram-header-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.diagram-pill-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #06B6D4;
+  background: rgba(6, 182, 212, 0.12);
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.diagram-status-live {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #10B981;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0.02em;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10B981;
+  display: inline-block;
+  box-shadow: 0 0 8px #10B981;
+  animation: diagramPulse 2s infinite ease-in-out;
+}
+
+@keyframes diagramPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.diagram-svg {
+  width: 100%;
+  height: auto;
+  max-height: 270px;
+  display: block;
+}
+
+/* Animated flow dots */
+.flow-pulse-dot-1 {
+  animation: flowDot 2.4s infinite ease-in-out;
+}
+
+.flow-pulse-dot-2 {
+  animation: flowDot 2.4s infinite ease-in-out 0.8s;
+}
+
+.flow-pulse-dot-3 {
+  animation: flowDot 2.4s infinite ease-in-out 1.6s;
+}
+
+@keyframes flowDot {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 4px #06B6D4);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-diagram {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+  
+  .diagram-header-label {
+    margin-bottom: 0.5rem;
+  }
+}

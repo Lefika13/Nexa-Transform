@@ -1,0 +1,143 @@
+.navbar-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: rgba(11, 18, 32, 0.9); /* navy with opacity */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.navbar-announcement {
+  background: linear-gradient(90deg, var(--blue), var(--turquoise));
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.navbar-container {
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo-img {
+  height: 2.6rem;
+  width: auto;
+  max-width: 260px;
+  display: block;
+  object-fit: contain;
+}
+
+.logo-light {
+  font-weight: 300;
+}
+
+.navbar-desktop {
+  display: none;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .navbar-desktop {
+    display: flex;
+  }
+}
+
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #D1D5DB; /* gray-300 */
+  transition: color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--turquoise);
+}
+
+.navbar-toggle {
+  display: block;
+  background: none;
+  border: none;
+  color: #D1D5DB;
+  padding: 0.5rem;
+  cursor: pointer;
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .navbar-toggle {
+    display: none;
+  }
+}
+
+.navbar-mobile {
+  background-color: var(--navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mobile-nav-list {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.mobile-nav-link {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #D1D5DB;
+}
+
+.mobile-nav-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--turquoise);
+}
+
+/* Base button styles used in navbar */
+.btn-primary {
+  background-color: var(--turquoise);
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  background-color: #0891B2; /* slightly darker turquoise */
+}
+
+.ml-4 { margin-left: 1rem; }
+.mt-2 { margin-top: 0.5rem; }
+.w-full { width: 100%; }
+
+/* Mobile ThemeToggle + Burger wrapper — hidden on desktop */
+.navbar-mobile-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .navbar-mobile-controls {
+    display: none;
+  }
+}

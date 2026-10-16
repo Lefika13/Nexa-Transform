@@ -1,0 +1,69 @@
+/* LecturerPortal.css */
+
+/* Monogram Watermark behind dashboard contents - high readability */
+.lms-bg-monogram-watermark {
+  position: fixed;
+  top: 55%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  height: 480px;
+  background-image: url('/logo.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Stat Cards */
+.stat-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Gradebook Table Scroll and Sticky Headers */
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+.left-0 {
+  left: 0;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+/* line clamp utility details */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+/* Inputs focus bounds */
+input:focus, select:focus, textarea:focus {
+  border-color: #06B6D4 !important; /* Turquoise accent focus ring */
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1);
+}
+
+/* Roll Call Present/Late Toggles styling */
+button:active {
+  transform: scale(0.98);
+}

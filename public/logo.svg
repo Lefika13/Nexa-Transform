@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 90" fill="none">
+  <defs>
+    <!-- Metallic Silver Gradient for the N -->
+    <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7A8799" />
+      <stop offset="30%" stop-color="#D8DFE8" />
+      <stop offset="55%" stop-color="#FFFFFF" />
+      <stop offset="80%" stop-color="#A8B2BE" />
+      <stop offset="100%" stop-color="#555F6E" />
+    </linearGradient>
+
+    <!-- Metallic Gold Gradient for the X -->
+    <linearGradient id="gold-grad-mark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7A5C0A" />
+      <stop offset="25%" stop-color="#EFB732" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="75%" stop-color="#F0C040" />
+      <stop offset="100%" stop-color="#6B3D0A" />
+    </linearGradient>
+
+    <!-- Metallic Gold Gradient for "TRANSFORM" text -->
+    <linearGradient id="gold-grad-text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8A6400" />
+      <stop offset="20%" stop-color="#F5C842" />
+      <stop offset="45%" stop-color="#D4AF37" />
+      <stop offset="70%" stop-color="#F0C040" />
+      <stop offset="100%" stop-color="#7A5200" />
+    </linearGradient>
+  </defs>
+
+  <!-- === NX MARK (starts at x=10) === -->
+
+  <!-- Gold X: drawn first so silver N overlaps it -->
+  <!-- Gold forward-slash of X: top-right to bottom-left -->
+  <polygon points="82,8  96,8  60,82 46,82" fill="url(#gold-grad-mark)" />
+  <!-- Gold back-slash of X: top-left to bottom-right -->
+  <polygon points="66,8  80,8 108,82 94,82" fill="url(#gold-grad-mark)" />
+
+  <!-- Silver N: left pillar + diagonal stroke -->
+  <rect x="10" y="8" width="14" height="74" fill="url(#silver-grad)" />
+  <!-- Diagonal of the N -->
+  <polygon points="10,8 24,8 60,82 46,82" fill="url(#silver-grad)" />
+  <!-- Right pillar of the N — ensures the N letter is complete -->
+  <rect x="46" y="8" width="14" height="74" fill="url(#silver-grad)" />
+
+  <!-- === TEXT BLOCK (starts at x=128) === -->
+
+  <!-- "NEXA" in white/currentColor -->
+  <text
+    x="128" y="48"
+    font-family="Montserrat, 'Arial Black', sans-serif"
+    font-weight="900"
+    font-size="42"
+    letter-spacing="3"
+    fill="white"
+  >NEXA</text>
+
+  <!-- "TRANSFORM" in gold gradient -->
+  <text
+    x="128" y="72"
+    font-family="Montserrat, 'Arial Black', sans-serif"
+    font-weight="700"
+    font-size="22"
+    letter-spacing="8"
+    fill="url(#gold-grad-text)"
+  >TRANSFORM</text>
+
+  <!-- Gold separator line -->
+  <line x1="128" y1="78" x2="670" y2="78" stroke="#D4AF37" stroke-width="1.2" opacity="0.7" />
+
+  <!-- Tagline -->
+  <text
+    x="128" y="88"
+    font-family="Montserrat, 'Arial Black', sans-serif"
+    font-weight="500"
+    font-size="8"
+    letter-spacing="3.5"
+    fill="white"
+    opacity="0.75"
+  >TRANSFORMING IDEAS. EMPOWERING FUTURES.</text>
+</svg>

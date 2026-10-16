@@ -1,0 +1,11 @@
+/* Contact CSS */
+.-mt-10 { margin-top: -2.5rem; }
+.bg-blue\/10 { background-color: rgba(37, 99, 235, 0.1); }
+.text-red-500 { color: #ef4444; }
+.resize-none { resize: none; }
+.hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+.hover\:bg-gray-50:hover { background-color: #f9fafb; }
+.max-w-6xl { max-width: 72rem; }
+.lg\:col-span-1 { grid-column: span 1 / span 1; }
+.lg\:col-span-2 { grid-column: span 2 / span 2; }
+.focus\:ring-blue:focus { --tw-ring-color: var(--blue); }

@@ -1,0 +1,89 @@
+/* LearnerPortal.css */
+
+/* Monogram Watermark behind portal contents - high readability */
+.lms-bg-monogram-watermark {
+  position: fixed;
+  top: 55%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  width: 480px;
+  height: 480px;
+  background-image: url('/logo.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.02;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Stat Cards */
+.stat-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Certificate Gradient Decorative Cards */
+.cert-gradient-card {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cert-gradient-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.cert-backdrop-logo {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 140px;
+  height: 140px;
+  background-image: url('/logo.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Text limits for description rows */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+/* Select indicators */
+select {
+  cursor: pointer;
+}
+
+input[type="date"] {
+  cursor: pointer;
+}
+
+/* Custom Table Styles */
+th {
+  text-align: left;
+}
+
+td {
+  vertical-align: middle;
+}

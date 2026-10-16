@@ -1,0 +1,91 @@
+/* Insights CSS */
+.border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+.group:hover .group-hover\:text-turquoise { color: var(--turquoise); }
+.group:hover .group-hover\:translate-x-2 { transform: translateX(0.5rem); }
+.group:hover .group-hover\:text-blue { color: var(--blue); }
+.border-gray-100 { border-color: #f3f4f6; }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+.hover\:shadow-2xl:hover { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.bg-white\/90 { background-color: rgba(255, 255, 255, 0.9); }
+.pb-24 { padding-bottom: 6rem; }
+
+/* Article Details Styling */
+.back-btn {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  transform: translateX(-4px);
+}
+
+.article-body-content p {
+  color: #1e293b;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.article-body-content h2 {
+  color: var(--navy);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--glacial);
+  padding-bottom: 0.5rem;
+}
+
+.article-body-content blockquote {
+  font-family: var(--font-heading);
+  border-left: 4px solid var(--turquoise);
+  background-color: var(--glacial);
+  padding: 1.5rem;
+  border-radius: 0 1rem 1rem 0;
+  margin: 2rem 0;
+  color: var(--blue);
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.article-body-content ul {
+  margin: 1.5rem 0;
+  padding-left: 0.5rem;
+}
+
+.article-body-content li {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #334155;
+  margin-bottom: 1rem;
+}
+
+/* Glass Card styling */
+.glass-card {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .article-body-content h2 {
+    font-size: 1.5rem;
+  }
+  .article-body-content p, 
+  .article-body-content li {
+    font-size: 1rem;
+  }
+}

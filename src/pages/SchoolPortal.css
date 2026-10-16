@@ -1,0 +1,783 @@
+/* ==========================================================================
+   Nexa School LMIS Portal - Modern School Management Styles
+   ========================================================================== */
+
+.sp-root {
+  min-height: 100vh;
+  background-color: #0B132B;
+  color: #F8FAFC;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.sp-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+
+/* Header */
+.sp-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 2rem;
+  background: rgba(11, 19, 43, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sp-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sp-brand-logo {
+  height: 38px;
+  width: auto;
+}
+
+.sp-school-badge {
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-school-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.sp-school-meta {
+  font-size: 0.72rem;
+  color: #38BDF8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.sp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sp-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #CBD5E1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sp-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Sub-nav tabs */
+.sp-tab-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 2rem;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+}
+
+.sp-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94A3B8;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sp-tab-btn:hover {
+  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sp-tab-btn.active {
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+/* Container */
+.sp-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.75rem 2rem 4rem 2rem;
+}
+
+/* Metrics Row */
+.sp-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.sp-metric-card {
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sp-metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.sp-metric-title {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sp-metric-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38BDF8;
+}
+
+.sp-metric-value {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+}
+
+.sp-metric-subtitle {
+  font-size: 0.78rem;
+  color: #10B981;
+  margin-top: 0.35rem;
+}
+
+/* Panel Card */
+.sp-panel {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.75rem;
+  backdrop-filter: blur(12px);
+  margin-bottom: 2rem;
+}
+
+.sp-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sp-panel-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.sp-panel-subtitle {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  margin-top: 0.2rem;
+}
+
+/* Tables */
+.sp-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.sp-table th {
+  background: rgba(15, 23, 42, 0.8);
+  color: #94A3B8;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.sp-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #E2E8F0;
+  vertical-align: middle;
+}
+
+.sp-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sp-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Badges */
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sp-badge-present {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.sp-badge-absent {
+  background: rgba(239, 68, 68, 0.15);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sp-badge-late {
+  background: rgba(245, 158, 11, 0.15);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.sp-badge-sports {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.sp-badge-medical {
+  background: rgba(168, 85, 247, 0.15);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+/* Button groups for quick marking */
+.sp-mark-group {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.sp-mark-btn {
+  border: none;
+  background: transparent;
+  color: #94A3B8;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sp-mark-btn.active-present {
+  background: #10B981;
+  color: #FFFFFF;
+}
+
+.sp-mark-btn.active-absent {
+  background: #EF4444;
+  color: #FFFFFF;
+}
+
+.sp-mark-btn.active-late {
+  background: #F59E0B;
+  color: #FFFFFF;
+}
+
+.sp-mark-btn.active-excused {
+  background: #38BDF8;
+  color: #0F172A;
+}
+
+/* Action button */
+.sp-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #0284C7, #0369A1);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+.sp-btn-primary:hover {
+  background: linear-gradient(135deg, #0369A1, #075985);
+  transform: translateY(-1px);
+}
+
+.sp-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sp-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ==========================================================================
+   OFFICIAL TERM REPORT CARD STYLING (Print & Screen Document)
+   ========================================================================== */
+
+.sp-report-card {
+  background: #FFFFFF;
+  color: #0F172A;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  max-width: 1100px;
+  margin: 0 auto;
+  border: 2px solid #E2E8F0;
+  position: relative;
+  font-family: 'Inter', 'Arial', sans-serif;
+}
+
+/* ---- Multi-Term Matrix Table ---- */
+.sp-rc-matrix-wrapper {
+  overflow-x: auto;
+  margin-bottom: 0;
+}
+
+.sp-rc-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin-bottom: 0;
+}
+
+.sp-rc-matrix th,
+.sp-rc-matrix td {
+  border: 1px solid #94A3B8;
+  padding: 0.35rem 0.4rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sp-rc-matrix thead tr:first-child th {
+  background: #1E3A5F;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.5rem 0.4rem;
+}
+
+.sp-rc-matrix thead tr:last-child th {
+  background: #2C4A70;
+  color: #E2E8F0;
+  font-size: 0.67rem;
+  font-weight: 600;
+}
+
+.sp-rc-matrix th.sp-rc-subj-col {
+  text-align: left;
+  min-width: 160px;
+  padding-left: 0.6rem;
+}
+
+.sp-rc-matrix td.sp-rc-subj-name {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 0.6rem;
+  color: #0F172A;
+  white-space: nowrap;
+}
+
+.sp-rc-matrix tbody tr:nth-child(even) td {
+  background: #F8FAFC;
+}
+
+.sp-rc-matrix tbody tr:hover td {
+  background: #EFF6FF;
+}
+
+.sp-rc-matrix td.sp-rc-final-pct {
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.sp-rc-matrix td.sp-rc-level {
+  font-weight: 700;
+}
+
+.sp-rc-level-7 { color: #166534; background: #DCFCE7; }
+.sp-rc-level-6 { color: #0369A1; background: #E0F2FE; }
+.sp-rc-level-5 { color: #92400E; background: #FEF3C7; }
+.sp-rc-level-4 { color: #374151; background: #F3F4F6; }
+.sp-rc-level-3 { color: #B45309; background: #FEF9C3; }
+.sp-rc-level-2 { color: #9A3412; background: #FEE2E2; }
+.sp-rc-level-1 { color: #7F1D1D; background: #FEE2E2; }
+
+/* Summary / Result / Absent rows */
+.sp-rc-matrix tr.sp-rc-avg-row td {
+  background: #1E3A5F !important;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.sp-rc-matrix tr.sp-rc-result-row td {
+  background: #0F4C2A !important;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sp-rc-matrix tr.sp-rc-absent-row td {
+  background: #7F1D1D !important;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* General Remarks Box */
+.sp-rc-general-remarks {
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  margin: 1rem 0;
+  background: #F8FAFC;
+}
+
+.sp-rc-general-remarks label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+}
+
+.sp-rc-general-remarks p {
+  font-size: 0.82rem;
+  color: #1E293B;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* CAPS Level Key footnote */
+.sp-rc-caps-key {
+  border-top: 2px solid #1E3A5F;
+  padding-top: 0.6rem;
+  margin-top: 0.5rem;
+  font-size: 0.67rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.sp-rc-caps-key strong {
+  color: #0F172A;
+}
+
+.sp-rc-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-size: 5rem;
+  font-weight: 900;
+  color: rgba(15, 23, 42, 0.03);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+}
+
+.sp-rc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px double #0B132B;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sp-rc-crest {
+  height: 72px;
+  width: auto;
+}
+
+.sp-rc-school-info {
+  text-align: center;
+  flex: 1;
+  padding: 0 1.5rem;
+}
+
+.sp-rc-school-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0B132B;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.sp-rc-school-subtitle {
+  font-size: 0.8rem;
+  color: #475569;
+  margin-top: 0.2rem;
+}
+
+.sp-rc-emis {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0284C7;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.sp-rc-qr-box {
+  text-align: center;
+  border: 1px solid #CBD5E1;
+  padding: 0.4rem;
+  border-radius: 6px;
+  background: #F8FAFC;
+}
+
+.sp-rc-qr-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.sp-rc-student-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  background: #F8FAFC;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 1.5rem;
+  font-size: 0.84rem;
+}
+
+.sp-rc-student-item label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+}
+
+.sp-rc-student-item span {
+  font-weight: 700;
+  color: #0F172A;
+}
+
+/* Report Card Marks Table */
+.sp-rc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.82rem;
+}
+
+.sp-rc-table th {
+  background: #0B132B;
+  color: #FFFFFF;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  border: 1px solid #0B132B;
+}
+
+.sp-rc-table td {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.sp-rc-table tr:nth-child(even) td {
+  background: #F8FAFC;
+}
+
+.sp-rc-caps-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.sp-rc-caps-7 { background: #DCFCE7; color: #166534; }
+.sp-rc-caps-6 { background: #E0F2FE; color: #0369A1; }
+.sp-rc-caps-5 { background: #FEF3C7; color: #92400E; }
+.sp-rc-caps-4 { background: #F1F5F9; color: #334155; }
+
+/* Report Card Summary & Comments */
+.sp-rc-remarks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sp-rc-remark-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.sp-rc-remark-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sp-rc-remark-text {
+  font-size: 0.8rem;
+  color: #1E293B;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* Signatures */
+.sp-rc-signatures {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.sp-rc-sig-block {
+  text-align: center;
+  width: 220px;
+}
+
+.sp-rc-sig-line {
+  border-bottom: 1px solid #0F172A;
+  margin-bottom: 0.4rem;
+  height: 35px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-family: 'Brush Script MT', 'cursive', sans-serif;
+  font-size: 1.35rem;
+  color: #0369A1;
+}
+
+.sp-rc-sig-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .sp-header, .sp-tab-bar, .sp-no-print,
+  .lmis-header, .lmis-sidebar, .lmis-nav { display: none !important; }
+  .sp-root, .lmis-root { background: transparent !important; }
+  .lmis-shell { display: block !important; }
+  .lmis-main { margin: 0 !important; padding: 0 !important; }
+  .sp-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+  .sp-report-card {
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    padding: 1.5rem !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .sp-rc-matrix th, .sp-rc-matrix td { font-size: 0.65rem !important; padding: 0.2rem 0.25rem !important; }
+  .sp-rc-matrix thead tr:first-child th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sp-rc-matrix tr.sp-rc-avg-row td,
+  .sp-rc-matrix tr.sp-rc-result-row td,
+  .sp-rc-matrix tr.sp-rc-absent-row td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sp-rc-level-7, .sp-rc-level-6, .sp-rc-level-5, .sp-rc-level-4 { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+

@@ -1,0 +1,32 @@
+/* InnovationLab CSS */
+.bg-\[\#050B14\] { background-color: #050B14; }
+.min-h-screen { min-height: 100vh; }
+.w-\[800px\] { width: 800px; }
+.h-\[800px\] { height: 800px; }
+.blur-\[120px\] { filter: blur(120px); }
+.tracking-tight { letter-spacing: -0.025em; }
+.h-96 { height: 24rem; }
+.scale-105 { transform: scale(1.05); }
+.duration-700 { transition-duration: 700ms; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.group:hover .group-hover\:opacity-100 { opacity: 1; }
+.group:hover .group-hover\:translate-y-0 { transform: translateY(0); }
+.translate-y-4 { transform: translateY(1rem); }
+.opacity-0 { opacity: 0; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.fixed { position: fixed; }
+.z-50 { z-index: 50; }
+.z-\[60\] { z-index: 60; }
+.max-w-md { max-width: 28rem; }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.backdrop-blur-md { backdrop-filter: blur(12px); }
+.bg-black\/60 { background-color: rgba(0, 0, 0, 0.6); }
+.bg-black\/50 { background-color: rgba(0, 0, 0, 0.5); }
+.bg-black\/80 { background-color: rgba(0, 0, 0, 0.8); }
+.bg-gradient-to-t { background-image: linear-gradient(to top, var(--tw-gradient-stops)); }
+.from-navy { --tw-gradient-from: var(--navy); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(11, 18, 32, 0)); }
+.to-transparent { --tw-gradient-to: transparent; }
+.h-64 { height: 16rem; }
+.bg-emerald\/10 { background-color: rgba(16, 185, 129, 0.1); }
+.border-emerald\/20 { border-color: rgba(16, 185, 129, 0.2); }
