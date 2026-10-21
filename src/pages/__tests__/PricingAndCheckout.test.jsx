@@ -29,11 +29,11 @@ describe('SaaS Pricing and Checkout Pages', () => {
     expect(html).not.toContain('Most Popular');
     expect(html).not.toContain('featured-ribbon-tag');
 
-    // Verify benefits heading and key benefit statements
-    expect(html).toContain('Key Institutional Benefits:');
-    expect(html).toContain('SETA &amp; QCTO audit-ready Portfolio of Evidence (PoE) tracking');
-    expect(html).toContain('Full institutional white-labeling hosted on your own custom web domain');
-    expect(html).toContain('Multi-campus, multi-entity centralized academic governance and scaling');
+    // Verify capabilities heading and key capability statements
+    expect(html).toContain('What you can do directly from the LMIS:');
+    expect(html).toContain('Disburse monthly stipends to learners directly from the LMIS');
+    expect(html).toContain('Pay stipends instantly to learner bank accounts directly from the LMIS via integrated Ozow Instant EFT rails');
+    expect(html).toContain('Orchestrate multi-campus and multi-entity stipend payouts');
   });
 
   it('renders Checkout page with plan information and form fields', () => {

@@ -8,15 +8,15 @@ const PLANS = [
     name: 'Starter Academy',
     priceZar: 'From R 25,000',
     cycle: 'billed annually or monthly',
-    description: 'Empowers emerging academies and boutique SDPs to digitize compliance, eliminate manual paperwork, and scale cohort operations.',
+    description: 'Equip your academy or training center to run cohorts digitally, track compliance, and manage stipend operations without spreadsheets.',
     learnersQuota: 'Less than 1,000 Active Learners',
     benefits: [
-      'SETA & QCTO audit-ready Portfolio of Evidence (PoE) tracking',
-      'Eliminate stipend fraud with dual Maker-Checker authorization',
-      'Automated SA bank batch EFT exporter (Standard Bank, Nedbank, FNB, ABSA)',
-      'Custom institutional branding with your academy logo and color identity',
-      'Multi-facilitator marking workflows and statutory progress reporting',
-      'Dedicated compliance onboarding and rapid rollout assistance'
+      'Disburse monthly stipends to learners directly from the LMIS using automated bank batch EFT files (Standard Bank, FNB, Nedbank, ABSA)',
+      'Prevent payment fraud and accidental double-payouts with dual Maker-Checker disbursement authorizations',
+      'Track learner progress and compile SETA & QCTO audit-ready digital Portfolios of Evidence (PoE) automatically',
+      'Brand your portal with your academy’s logo, colors, and institutional identity across web and student portals',
+      'Assign multi-facilitator marking workflows with automated grading rubrics and statutory progress registers',
+      'Onboard your academic team quickly with guided compliance setup and student data migration'
     ],
     ctaText: 'Get Started with Starter',
     actionCode: 'starter'
@@ -29,12 +29,12 @@ const PLANS = [
     description: 'Designed for accredited institutions scaling high-volume learnerships with full corporate white-labeling and direct payout rails.',
     learnersQuota: '1,000+ to 1,500 Active Learners',
     benefits: [
-      'Full institutional white-labeling hosted on your own custom web domain',
-      'Direct instant stipend disbursements via integrated Ozow Instant EFT API',
-      'Biometric and geo-location attendance sync ensuring verifiable grant compliance',
-      'Instant one-click batch ZIP archiving for rapid SETA verification visits',
-      'Uncapped lecturer, assessor, moderator, and financial management seats',
-      'Priority 1-hour SLA account manager and SLA uptime assurance'
+      'Pay stipends instantly to learner bank accounts directly from the LMIS via integrated Ozow Instant EFT rails',
+      'Host the entire platform under your own custom domain (e.g., learn.yourfirm.co.za) with complete white-label branding',
+      'Verify classroom and workplace attendance using biometric check-ins and geo-location before releasing stipends',
+      'Export complete statutory SETA PoE evidence archives in one-click batch ZIP packs for site verification visits',
+      'Empower unlimited assessors, moderators, lecturers, and finance staff with role-based governance access',
+      'Resolve issues rapidly with guaranteed 1-hour priority SLA response and dedicated account management'
     ],
     ctaText: 'Deploy Growth Platform',
     actionCode: 'growth'
@@ -44,15 +44,15 @@ const PLANS = [
     name: 'Pro+ Plan',
     priceZar: 'From R 60,000',
     cycle: 'custom institutional agreement',
-    description: 'Enterprise architecture for TVET colleges, universities, and multi-campus learnership consortia requiring tailored integrations.',
+    description: 'Enterprise architecture for TVET colleges, universities, and consortia requiring ERP integration and high concurrency.',
     learnersQuota: '1,500+ Active Learners',
     benefits: [
-      'Multi-campus, multi-entity centralized academic governance and scaling',
-      'Seamless automated ERP & HRIS ledger synchronization (SAP, Sage 300, PeopleSoft)',
-      'Dedicated cloud database replica with contractual 99.9% uptime SLA',
-      'Custom corporate payout rails and bespoke SETA regulatory telemetry',
-      'Native white-label mobile app deployment for staff and learners',
-      '24/7 prioritized operational hotline and executive onboarding team'
+      'Orchestrate multi-campus and multi-entity stipend payouts and academic operations across multiple commercial banks',
+      'Sync student records, fee billing, and stipend ledgers automatically with your enterprise ERP (SAP, Sage 300, PeopleSoft)',
+      'Roll out custom white-labeled native mobile apps on iOS and Android for offline coursework and assessor grading',
+      'Run on isolated dedicated cloud database infrastructure with contractual 99.9% uptime SLA',
+      'Stream real-time statutory regulatory telemetry to external verification portals and corporate grant funders',
+      'Rely on a dedicated 24/7 technical hotline and executive implementation engineering team'
     ],
     ctaText: 'Speak to Enterprise Sales',
     actionCode: 'pro_plus'
@@ -129,8 +129,8 @@ export const Pricing = () => {
                   </p>
                 </div>
 
-                {/* Key Benefits Checklist */}
-                <div className="features-list-heading">Key Institutional Benefits:</div>
+                {/* Key Capabilities Checklist */}
+                <div className="features-list-heading">What you can do directly from the LMIS:</div>
                 <ul className="box-features-list">
                   {plan.benefits.map((benefit, idx) => (
                     <li key={idx} className="feature-check-item">
