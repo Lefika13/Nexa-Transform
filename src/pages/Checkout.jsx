@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ShieldCheck, CheckCircle2, Lock, ArrowRight, Loader2, Building, Mail, User, Phone } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Lock, Loader2, Building } from 'lucide-react';
+import './Checkout.css';
 
 const PLAN_INFO = {
   starter: {
@@ -114,76 +115,82 @@ export const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="checkout-page-root">
+      <div className="checkout-container">
         {/* Header */}
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
-            <ShieldCheck className="w-4 h-4" /> Ozow Instant EFT Verified Checkout
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-black text-white">
+        <div className="checkout-header-wrap">
+          <div className="checkout-badge">
+            <ShieldCheck style={{ width: 16, height: 16 }} /> Ozow Instant EFT Verified Checkout
+          </div>
+          <h1 className="checkout-title">
             Provision Your Academy Portal
           </h1>
-          <p className="text-slate-400 text-sm mt-2">
-            Instant EFT with ABSA, Capitec, FNB, Nedbank, Standard Bank, Investec & TymeBank.
+          <p className="checkout-subtitle">
+            Instant EFT with ABSA, Capitec, FNB, Nedbank, Standard Bank, Investec &amp; TymeBank.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        <div className="checkout-grid">
           {/* Form */}
-          <div className="md:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-8">
-            <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <Building className="w-5 h-5 text-blue-400" /> Institution Details
+          <div className="checkout-card-box">
+            <h2 className="checkout-card-title">
+              <Building style={{ width: 20, height: 20, color: '#38BDF8' }} /> Institution Details
             </h2>
 
             {errorMessage && (
-              <div className="mb-6 p-4 rounded-xl bg-red-950/50 border border-red-800 text-red-300 text-xs">
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: '12px',
+                padding: '0.85rem 1rem',
+                color: '#FCA5A5',
+                fontSize: '0.8rem',
+                marginBottom: '1.25rem'
+              }}>
                 {errorMessage}
               </div>
             )}
 
-            <form onSubmit={handleCheckout} className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <form onSubmit={handleCheckout}>
+              <div className="checkout-field-group">
+                <label className="checkout-field-label">
                   Academy / Institution Name *
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    value={formData.academyName}
-                    onChange={handleAcademyNameChange}
-                    placeholder="e.g. Apex Training Institute"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  value={formData.academyName}
+                  onChange={handleAcademyNameChange}
+                  placeholder="e.g. Apex Training Institute"
+                  className="checkout-input-text"
+                />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <div className="checkout-field-group">
+                <label className="checkout-field-label">
                   Preferred Subdomain URL *
                 </label>
-                <div className="flex items-center">
+                <div className="subdomain-input-group">
                   <input
                     type="text"
                     required
                     value={formData.subdomainSlug}
                     onChange={(e) => setFormData({ ...formData, subdomainSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
                     placeholder="apex-institute"
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-l-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="checkout-input-text subdomain-input-field"
                   />
-                  <span className="bg-slate-800 text-slate-400 text-xs px-3.5 py-3.5 rounded-r-xl border border-l-0 border-slate-800 font-mono">
+                  <span className="subdomain-suffix-tag">
                     .nexa-transform.com
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1">
+                <p className="field-subtext">
                   You can bind your own custom domain (e.g. learn.apex.co.za) anytime in your academy settings.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="checkout-field-group form-two-cols">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="checkout-field-label">
                     Super Admin Full Name *
                   </label>
                   <input
@@ -192,11 +199,11 @@ export const Checkout = () => {
                     value={formData.adminName}
                     onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
                     placeholder="Dr. Thabo Khumalo"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="checkout-input-text"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="checkout-field-label">
                     Billing / Super Admin Email *
                   </label>
                   <input
@@ -205,13 +212,13 @@ export const Checkout = () => {
                     value={formData.adminEmail}
                     onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
                     placeholder="admin@apex.co.za"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="checkout-input-text"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <div className="checkout-field-group">
+                <label className="checkout-field-label">
                   Contact Phone Number *
                 </label>
                 <input
@@ -220,60 +227,52 @@ export const Checkout = () => {
                   value={formData.contactPhone}
                   onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
                   placeholder="+27 82 000 0000"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="checkout-input-text"
                 />
               </div>
 
               {/* Billing Cycle Option */}
-              <div className="pt-4 border-t border-slate-800">
-                <label className="block text-xs font-semibold text-slate-300 mb-3">
+              <div className="checkout-field-group" style={{ paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <label className="checkout-field-label">
                   Billing Cycle
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
+                <div className="cycle-selector-grid">
+                  <div
                     onClick={() => setBillingCycle('annual')}
-                    className={`p-3.5 rounded-xl text-left border transition-all ${
-                      billingCycle === 'annual'
-                        ? 'border-blue-500 bg-blue-500/10 text-white'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
+                    className={`cycle-option-card ${billingCycle === 'annual' ? 'selected' : ''}`}
                   >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-bold">Annual Upfront</span>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">SAVE 15%</span>
+                    <div className="cycle-card-top">
+                      <span className="cycle-card-name">Annual Upfront</span>
+                      <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34D399', padding: '0.15rem 0.5rem', borderRadius: 9999, fontWeight: 800 }}>
+                        SAVE 15%
+                      </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 block">Single annual invoice</span>
-                  </button>
+                    <span className="cycle-card-hint">Single annual invoice</span>
+                  </div>
 
-                  <button
-                    type="button"
+                  <div
                     onClick={() => setBillingCycle('monthly')}
-                    className={`p-3.5 rounded-xl text-left border transition-all ${
-                      billingCycle === 'monthly'
-                        ? 'border-blue-500 bg-blue-500/10 text-white'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    }`}
+                    className={`cycle-option-card ${billingCycle === 'monthly' ? 'selected' : ''}`}
                   >
-                    <span className="text-xs font-bold block mb-1">Monthly Billing</span>
-                    <span className="text-[11px] text-slate-400 block">Recurring payment link</span>
-                  </button>
+                    <span className="cycle-card-name">Monthly Billing</span>
+                    <span className="cycle-card-hint">Recurring payment link</span>
+                  </div>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2 mt-6 transition-all disabled:opacity-50"
+                className="checkout-submit-btn"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />
                     Connecting to Ozow Instant EFT...
                   </>
                 ) : (
                   <>
-                    <Lock className="w-4 h-4" />
+                    <Lock style={{ width: 18, height: 18 }} />
                     Pay R {calculateTotal().toLocaleString()} via Ozow Instant EFT
                   </>
                 )}
@@ -281,48 +280,44 @@ export const Checkout = () => {
             </form>
           </div>
 
-          {/* Order Summary */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
-              Subscription Summary
-            </h3>
-
-            <div className="border-b border-slate-800 pb-4 mb-4">
-              <h4 className="text-base font-bold text-white">{plan.name}</h4>
-              <p className="text-xs text-blue-400 font-semibold mt-0.5">{plan.learners}</p>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">{plan.description}</p>
+          {/* Order Summary Box */}
+          <div className="checkout-card-box">
+            <div className="summary-plan-header">
+              <h3 className="summary-plan-title">{plan.name}</h3>
+              <span className="summary-plan-quota">{plan.learners}</span>
+              <p className="summary-plan-desc">{plan.description}</p>
             </div>
 
-            <div className="space-y-2 text-xs text-slate-300 mb-6">
-              <div className="flex justify-between">
+            <div className="summary-details-rows">
+              <div className="summary-row">
                 <span>Billing Period:</span>
-                <span className="font-semibold text-white capitalize">{billingCycle}</span>
+                <span className="val" style={{ textTransform: 'capitalize' }}>{billingCycle}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Setup & Provisioning:</span>
-                <span className="text-emerald-400 font-semibold">FREE (Automated)</span>
+              <div className="summary-row">
+                <span>Setup &amp; Provisioning:</span>
+                <span className="val" style={{ color: '#34D399' }}>FREE (Automated)</span>
               </div>
-              <div className="flex justify-between">
+              <div className="summary-row">
                 <span>SETA PoE Exporter:</span>
-                <span className="font-semibold text-white">Included</span>
+                <span className="val">Included</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800 flex justify-between items-baseline mb-6">
-              <span className="text-sm font-bold text-slate-300">Total Payable:</span>
-              <div className="text-right">
-                <span className="text-2xl font-black text-white">
+            <div className="summary-total-area">
+              <span className="total-label">Total Payable:</span>
+              <div>
+                <span className="total-amount-display">
                   R {calculateTotal().toLocaleString()}
                 </span>
-                <span className="text-[10px] text-slate-500 block">ZAR (Excl. VAT)</span>
+                <span className="total-currency-note">ZAR (Excl. VAT)</span>
               </div>
             </div>
 
-            <div className="bg-slate-950 rounded-2xl p-4 text-[11px] text-slate-400 space-y-2 border border-slate-800/80">
-              <div className="flex items-center gap-2 text-emerald-400 font-semibold">
-                <CheckCircle2 className="w-4 h-4 shrink-0" /> Zero-Touch Instant Provisioning
+            <div className="security-trust-box">
+              <div className="trust-title">
+                <CheckCircle2 style={{ width: 16, height: 16 }} /> Zero-Touch Instant Provisioning
               </div>
-              <p className="text-[10px] leading-relaxed">
+              <p style={{ margin: 0 }}>
                 Upon payment confirmation, your academy database is partitioned and your Super Admin credentials will be dispatched to your email immediately.
               </p>
             </div>
