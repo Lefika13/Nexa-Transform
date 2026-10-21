@@ -109,9 +109,51 @@
   </url>
   <url>
     <loc>https://nexa-transform.com/insights</loc>
-    <lastmod>2026-09-27</lastmod>
+    <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/designing-a-multi-role-back-office-system</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/dmaic-process-improvement-a-practical-guide-to-all-five-phases</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/custom-telemetry-management-system-pricing-and-cost-factors</loc>
+    <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/a-disciplined-approach-to-continuous-improvement</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/custom-business-software-development-a-practical-guide</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/operational-portal-development-from-process-design-to-deployment</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nexa-transform.com/insights/operational-improvement-consulting-a-south-african-buying-guide</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://nexa-transform.com/terms</loc>

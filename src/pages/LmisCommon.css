@@ -447,22 +447,47 @@ img { max-width: 100%; display: block; }
 /* ─── Stat Cards ────────────────────────────── */
 .lmis-stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0.875rem;
   margin-bottom: 1.5rem;
 }
-@media (min-width: 640px) { .lmis-stats-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); } }
-.lmis-stat {
-  background: var(--bg-card); border-radius: var(--radius);
-  padding: 1.1rem; border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  display: flex; align-items: center; gap: 0.875rem;
-  transition: box-shadow 0.2s, transform 0.2s;
+@media (min-width: 640px) {
+  .lmis-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  }
 }
-.lmis-stat:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.lmis-stat {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.lmis-stat:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+.lmis-stat > div:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
 .lmis-stat-icon {
-  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 .lmis-stat-icon.navy { background: rgba(11,18,32,0.08); color: var(--navy); }
 .lmis-stat-icon.gold { background: var(--gold-dim); color: var(--gold); }
@@ -470,8 +495,32 @@ img { max-width: 100%; display: block; }
 .lmis-stat-icon.emerald { background: rgba(16,185,129,0.1); color: var(--emerald); }
 .lmis-stat-icon.red { background: rgba(239,68,68,0.1); color: var(--red); }
 .lmis-stat-icon.orange { background: rgba(245,158,11,0.1); color: var(--orange); }
-.lmis-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--text-main); line-height: 1; }
-.lmis-stat-label { font-size: 0.68rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+
+.lmis-stat-val {
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+  letter-spacing: -0.01em;
+}
+.lmis-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+}
 
 /* ─── Cards ─────────────────────────────────── */
 .lmis-card {
@@ -495,8 +544,8 @@ img { max-width: 100%; display: block; }
 .lmis-3col { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 @media (min-width: 640px) { .lmis-3col { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .lmis-3col { grid-template-columns: repeat(3, 1fr); } }
-.lmis-4col { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
-@media (min-width: 1024px) { .lmis-4col { grid-template-columns: repeat(4,1fr); } }
+.lmis-4col { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
+@media (min-width: 1024px) { .lmis-4col { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } }
 
 /* ─── Course/Assignment Row Item ────────────── */
 .lmis-item-row {

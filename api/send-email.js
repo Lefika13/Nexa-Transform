@@ -1,3 +1,5 @@
+import { checkRateLimit } from './_rateLimit.js';
+
 // Vercel Serverless Function: Transactional Email Dispatcher via Resend API
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -15,6 +17,16 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Enterprise Security: Rate limit outbound transactional email dispatch
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const rateStatus = checkRateLimit(clientIp, 20, 60 * 1000);
+  if (!rateStatus.allowed) {
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: 'Email rate limit exceeded. Please wait a minute before requesting further notifications.'
+    });
   }
 
   const apiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;

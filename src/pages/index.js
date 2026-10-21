@@ -24,4 +24,12 @@ export { SchoolAdminPortal } from './SchoolAdminPortal';
 export { SchoolTeacherPortal } from './SchoolTeacherPortal';
 export { SchoolStudentPortal } from './SchoolStudentPortal';
 export { SaReportCard } from './SaReportCard';
+export { InsightPost } from './InsightPost';
+export { FAQ } from './FAQ';
+export { RefundPolicy } from './RefundPolicy';
+export { LmisTour } from './LmisTour';
+export { VerifyRecord } from './VerifyRecord';
+export { Pricing } from './Pricing';
+export { Checkout } from './Checkout';
+
 

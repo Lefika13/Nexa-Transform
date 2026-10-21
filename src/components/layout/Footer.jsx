@@ -54,7 +54,10 @@ export const Footer = () => {
             <li><Link to="/ecosystem">Ecosystem</Link></li>
             {isVisible('resources') && <li><Link to="/resources">Resources</Link></li>}
             <li><Link to="/insights">Insights</Link></li>
+            <li><Link to="/faq">FAQ</Link></li>
             <li><Link to="/lmis">LMIS Portal</Link></li>
+            <li><Link to="/lmis/tour">Look Inside LMIS</Link></li>
+            <li><Link to="/verify">Verify Document</Link></li>
           </ul>
         </div>
 
@@ -88,9 +91,13 @@ export const Footer = () => {
           <div className="footer-legal">
             <Link to="/privacy">Privacy Policy</Link>
             <Link to="/terms">Terms of Service</Link>
+            <Link to="/refund-policy">Refund Policy</Link>
+            <Link to="/faq">FAQ</Link>
+            <Link to="/verify">Verify Records</Link>
           </div>
         </div>
       </div>
+
     </footer>
   );
 };

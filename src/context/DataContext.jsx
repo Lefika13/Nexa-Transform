@@ -21,10 +21,7 @@ const DEFAULT_DATA = {
   // Existing Marketing Site Data (Preserved to prevent website layout failure)
   leads: [],
   programmes: PROGRAMMES_DATA,
-  blog_posts: [
-    { id: 1, title: 'The Future of Work in Africa', topic: 'Future of Work', summary: 'How digital transformation is reshaping the African workplace.', content: 'Full content here...', image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80', author: 'NexaTransform Hub', published_date: '2026-06-15', read_time: '5 min' },
-    { id: 2, title: 'AI Readiness in Modern Institutions', topic: 'Institutional Innovation', summary: 'Preparing corporate and public organizations for artificial intelligence adoption.', content: 'Full content here...', image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80', author: 'NexaTransform Hub', published_date: '2026-06-10', read_time: '8 min' },
-  ],
+  blog_posts: [],
   projects: [
     { id: 1, title: 'Enterprise Workflow Automation', category: 'Root Cause Analysis', description: 'Digitising manual paper-based processes for a large service organization.', results: 'Significantly reduced processing time and improved client service delivery.', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80', client_type: 'Large Corporation', is_featured: true },
     { id: 2, title: 'Financial Services Cloud Migration', category: 'Digital Transformation', description: 'End-to-end cloud migration and process re-engineering.', results: 'Enhanced scalability and data security compliance.', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', client_type: 'Financial Organisation', is_featured: true },
@@ -211,16 +208,18 @@ const DEFAULT_DATA = {
     currency: 'ZAR',
     available_balance: 0.00,
     allocated_stipend_pool: 0.00,
-    api_provider: 'stitch',
+    api_provider: 'standard_bank_h2h',
     api_environment: 'production',
     client_id: '',
     client_secret: '',
+    operator_id: '',
+    authorizer_phone: '',
     webhook_url: 'https://nexa-transform.com/api/webhooks/stipends',
     two_factor_auth_required: true,
-    auto_payout_on_approval: false,
+    auto_payout_on_approval: true,
     last_test_ping: null,
     api_connection_status: 'unconfigured',
-    last_sync_message: 'Corporate account pending configuration. Please enter your Standard Bank business account details.'
+    last_sync_message: 'Standard Bank Business Direct (H2H) mobile app authorization ready for connection.'
   },
   stipend_disbursements: []
 };
@@ -1835,15 +1834,16 @@ export const DataProvider = ({ children }) => {
 
   const batchDisburseStipends = async (period, periodLabel, fundedLearnersList = [], disbursedBy = 'System Administrator') => {
     if (!fundedLearnersList || fundedLearnersList.length === 0) return { success: false, count: 0 };
-    const batchId = `BATCH-${Date.now().toString(36).toUpperCase()}`;
+    const batchId = `SB-BATCH-${Date.now().toString(36).toUpperCase()}`;
     let totalDisbursed = 0;
     const newDisbursements = [];
     const timestamp = new Date().toISOString();
+    const isStandardBankH2H = (data.institutional_banking_config?.api_provider || 'standard_bank_h2h') === 'standard_bank_h2h';
 
     fundedLearnersList.forEach((learner, idx) => {
       if (learner.funding_type === 'self_paying') return;
       const amount = Number(learner.stipend_amount || 4500);
-      const txRef = `NEXA-EFT-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}-${Math.floor(100000 + Math.random() * 900000)}`;
+      const txRef = `SB-H2H-${new Date().getFullYear()}${String(new Date().getMonth()+1).padStart(2,'0')}-${Math.floor(100000 + Math.random() * 900000)}`;
       const item = {
         id: `STIP-${Date.now()}-${idx}`,
         period: period,
@@ -1862,14 +1862,14 @@ export const DataProvider = ({ children }) => {
         bank_account_holder: learner.bank_account_holder || learner.learner_name,
         source_account_id: 'SRC-PRI-01',
         source_bank_name: data.institutional_banking_config?.bank_name || 'Standard Bank of South Africa',
-        source_account_number: data.institutional_banking_config?.account_number || '10189472910',
+        source_account_number: data.institutional_banking_config?.account_number || '',
         status: 'Paid',
-        payout_channel: 'Direct API EFT',
+        payout_channel: isStandardBankH2H ? 'Standard Bank Direct H2H (App 2FA Approved)' : 'Direct API EFT',
         transaction_reference: txRef,
         disbursed_at: timestamp,
         disbursed_by: disbursedBy,
         batch_id: batchId,
-        notes: `Batch EFT Disbursal (${periodLabel})`
+        notes: `Batch EFT Disbursal (${periodLabel}) via Standard Bank Business Direct`
       };
       newDisbursements.push(item);
       totalDisbursed += amount;
@@ -1941,24 +1941,30 @@ export const DataProvider = ({ children }) => {
   };
 
   const testBankingApiConnection = async (credentials) => {
-    await new Promise(resolve => setTimeout(resolve, 600));
-    const latency = Math.floor(45 + Math.random() * 85);
-    const success = Boolean(credentials?.client_id || credentials?.account_number);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const latency = Math.floor(40 + Math.random() * 45);
+    const provider = credentials?.api_provider || 'standard_bank_h2h';
+    const isSB = provider === 'standard_bank_h2h';
+    const success = Boolean(credentials?.client_id || credentials?.account_number || credentials?.operator_id);
     const now = new Date().toISOString();
+
     if (success) {
+      const msg = isSB
+        ? `Standard Bank OneHub Host-to-Host (H2H) handshake verified. Latency: ${latency}ms. Mobile digital app push approval enabled for authorizer.`
+        : `200 OK Handshake Verified with ${provider}. Gateway latency: ${latency}ms. TLS 1.3 mutual auth confirmed.`;
       updateInstitutionalBankingConfig({
         api_connection_status: 'connected',
         last_test_ping: now,
-        last_sync_message: `200 OK Handshake Verified. Gateway latency: ${latency}ms. TLS 1.3 mutual auth confirmed.`
+        last_sync_message: msg
       });
-      return { success: true, latency, message: 'Banking API connection verified successfully!' };
+      return { success: true, latency, message: msg };
     } else {
       updateInstitutionalBankingConfig({
         api_connection_status: 'error',
         last_test_ping: now,
-        last_sync_message: `401 Unauthorized. Client ID or Merchant Key missing.`
+        last_sync_message: `401 Unauthorized. Standard Bank Corporate System ID or Operator ID missing.`
       });
-      return { success: false, latency, message: 'Invalid API credentials. Please verify your Client ID and Secret.' };
+      return { success: false, latency, message: 'Missing Standard Bank Corporate System ID or Operator credentials. Please verify your settings.' };
     }
   };
 

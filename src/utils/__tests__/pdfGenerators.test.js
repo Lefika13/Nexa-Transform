@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateProofOfRegistrationPDF } from '../registrationPdf';
 import { generatePoePDF } from '../poePdf';
 import { generateAcademicTranscriptPDF } from '../transcriptPdf';
+import { generateCompletionCertificatePDF } from '../completionCertificatePdf';
 
 describe('LMIS Official PDF Document Engines', () => {
   it('generates an official Proof of Registration PDF without errors', () => {
@@ -98,6 +99,22 @@ describe('LMIS Official PDF Document Engines', () => {
       student,
       modules,
       issueDate: '2026-09-26'
+    });
+
+    expect(doc).toBeDefined();
+    expect(typeof doc.output).toBe('function');
+    const pdfDataUri = doc.output('datauristring');
+    expect(pdfDataUri).toContain('data:application/pdf');
+  });
+
+  it('generates an official Certificate of Completion for self-paying learners without errors', () => {
+    const doc = generateCompletionCertificatePDF({
+      learnerName: 'Lefika Molefe',
+      studentNumber: 'NX-2026-0842',
+      idPassport: '9802034678890',
+      programmeTitle: 'Applied Enterprise Process Automation & BPMN 2.0',
+      grade: '88% (Practical Distinction)',
+      isSelfPaying: true
     });
 
     expect(doc).toBeDefined();

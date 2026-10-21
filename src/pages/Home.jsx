@@ -16,11 +16,15 @@ import {
   Search,
   Sparkles,
   Globe,
-  BookOpen
+  BookOpen,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
+
 import { useData } from '../context/DataContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { sendInstitutionalEmail } from '../utils/emailNotifier';
+import { INSIGHTS_ARTICLES } from '../data/insightsData';
 import './Home.css';
 
 const skillsProgrammes = [
@@ -190,6 +194,8 @@ export const Home = () => {
   const lastClickTime = useRef(0);
   const [email, setEmail] = useState('');
   const { addLead } = useData();
+
+
   const { trackClick } = useAnalytics();
   const [formStatus, setFormStatus] = useState('');
 
@@ -499,7 +505,79 @@ export const Home = () => {
         </div>
       </section>
 
+      {/* Featured Articles & Operational Thought Leadership */}
+      <section className="py-20 px-4 bg-slate-50/70 border-t border-b border-slate-200/60">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 bg-[#0B132B] text-[#06B6D4] shadow-xs">
+                <BookOpen size={13} className="text-[#06B6D4]" />
+                <span>Nexa Research &amp; Articles</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#0B132B] tracking-tight">
+                Latest Operational Insights &amp; Blueprints
+              </h2>
+              <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl">
+                Explore in-depth publications written by Nexa practitioners on DMAIC root-cause solving, BPMN 2.0 process modeling, and custom enterprise software architecture.
+              </p>
+            </div>
+            <Link
+              to="/insights"
+              className="mt-4 md:mt-0 inline-flex items-center gap-1.5 text-sm font-bold text-[#06B6D4] hover:text-[#0B132B] transition-colors"
+            >
+              Explore All {INSIGHTS_ARTICLES.length} Articles <ArrowRight size={15} />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {INSIGHTS_ARTICLES.slice(0, 3).map(article => (
+              <Link
+                key={article.slug}
+                to={`/insights/${article.slug}`}
+                className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-[#06B6D4]/50 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div className="aspect-[16/10] overflow-hidden bg-slate-100 relative">
+                  <img
+                    src={article.coverImage}
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <div className="absolute top-3 left-3">
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-white/95 text-[#0B132B] backdrop-blur-sm shadow-xs border border-slate-200">
+                      {article.category}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-[#0B132B] group-hover:text-[#06B6D4] transition-colors leading-snug mb-1.5 line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <div className="text-[11px] font-semibold text-slate-500 mb-2 flex items-center gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#0B132B] text-[#06B6D4] inline-flex items-center justify-center text-[8px] font-bold">NT</span>
+                      <span>By {article.author}</span>
+                    </div>
+                    <p className="text-slate-600 text-xs sm:text-sm line-clamp-2 mb-4 leading-relaxed">
+                      {article.excerpt}
+                    </p>
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>{article.readTime}</span>
+                    <span className="font-bold text-[#0B132B] group-hover:text-[#06B6D4] inline-flex items-center gap-1">
+                      Read Blueprint <ArrowRight size={13} />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
+
+
       <section className="py-20 px-4">
         <div className="container">
           <div className="cta-card bg-navy text-white rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">

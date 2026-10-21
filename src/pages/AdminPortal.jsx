@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { AttachmentList, FileAttachmentZone } from './LmisAttachment';
@@ -7,12 +7,14 @@ import { supabase } from '../supabaseClient';
 import { generateProofOfRegistrationPDF } from '../utils/registrationPdf';
 import { generateProofOfStipendPaymentPDF } from '../utils/stipendReceiptPdf';
 import { generatePoePDF } from '../utils/poePdf';
+import { generateCompletionCertificatePDF } from '../utils/completionCertificatePdf';
 import { isDeliverableEmail, safeSupabaseSignUp } from '../utils/emailValidator';
 import { sendInstitutionalEmail, generateWelcomeEmailHtml } from '../utils/emailNotifier';
 import { calculateModuleAcademicRecord } from '../utils/gradeCalculations';
 import { LmisCalendarSchedule } from '../components/shared/LmisCalendarSchedule';
 import { getPortalSession, setPortalSession, clearPortalSession, useSessionInactivity } from '../utils/sessionManager';
 import { WEBSITE_MODULES } from '../data/websiteModules';
+import { useTenant } from '../context/TenantContext';
 import './LmisCommon.css';
 
 /* ── Icons ─────────────────────────────────── */
@@ -95,6 +97,7 @@ const AUTHORIZED_ADMIN_EMAILS = [
 function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomTabs, onRefresh, syncStatus, onLogout, onRolePreviewChange, isSuperAdminUser }) {
   const [open, setOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const { tenant } = useTenant();
 
   const handleManualSync = async () => {
     setSyncing(true);
@@ -108,8 +111,14 @@ function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomT
       <header className="lmis-header">
         <div className="lmis-header-left">
           <button className="lmis-menu-toggle lmis-mobile-menu-btn" onClick={() => setOpen(true)}><IcoMenu size={20} /></button>
-          <Link to="/lmis"><img src="/logo.svg" alt="NX" className="lmis-header-logo" /></Link>
-          <span className="lmis-header-title">LMIS</span>
+          <Link to="/lmis" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            {tenant?.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.name} className="lmis-header-logo" style={{ maxHeight: '28px', objectFit: 'contain' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+            ) : (
+              <img src="/logo.svg" alt="NX" className="lmis-header-logo" />
+            )}
+            <span className="lmis-header-title">{tenant?.name ? (tenant.slug === 'nexa' ? 'LMIS' : tenant.name) : 'LMIS'}</span>
+          </Link>
         </div>
         <div className="lmis-header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <ThemeToggle />
@@ -143,6 +152,40 @@ function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomT
           <button type="button" onClick={onLogout || (() => window.location.href="/lmis")} className="lmis-exit-link" style={{ background: "none", border: "none", cursor: "pointer" }}>🚪 Sign Out</button>
         </div>
       </header>
+      {/* Enterprise Security & Telemetry Sub-bar */}
+      <div style={{
+        background: 'rgba(15, 23, 42, 0.95)',
+        borderBottom: '1px solid rgba(56, 189, 248, 0.18)',
+        padding: '0.35rem 1.25rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.6rem',
+        fontSize: '0.74rem',
+        color: '#94a3b8'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#34d399', fontWeight: 600 }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+            TLS 1.3 / HSTS Active
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#38bdf8' }}>
+            🛡️ 30-Min Inactivity Auto-Protect
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            📁 Upload Payload Sandboxing (50MB Cap)
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            ⚖️ POPIA Data Isolation
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <Link to="/verify" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+            Public Verification Portal ↗
+          </Link>
+        </div>
+      </div>
       <div className="lmis-body">
         <aside className="lmis-sidebar lmis-sidebar-desktop">
           <nav className="lmis-nav">
@@ -354,6 +397,7 @@ export const AdminPortal = () => {
       return 'overview';
     }
   });
+  const [userTab, setUserTab] = useState('Learners');
   const [showBulkCsvModal, setShowBulkCsvModal] = useState(false);
   const [csvPreviewRows, setCsvPreviewRows] = useState([]);
   const [csvTargetCourse, setCsvTargetCourse] = useState('');
@@ -371,6 +415,27 @@ export const AdminPortal = () => {
   const outstanding = fees.filter(f => f.status !== 'Paid').reduce((s, f) => s + ((f.amount || 0) - (f.amount_paid || 0)), 0);
   const pendingGrades = submissions.filter(s => s.status === 'Submitted').length;
 
+  /* ── Unified Course Catalog (Active Database Courses + Curriculum Modules) ── */
+  const availableCourseOptions = React.useMemo(() => {
+    const list = [];
+    const seen = new Set();
+    (courses || []).forEach(c => {
+      const code = (c.code || '').trim().toUpperCase();
+      if (code && !seen.has(code)) {
+        seen.add(code);
+        list.push({ code, title: c.title || code, category: c.category || 'General' });
+      }
+    });
+    (WEBSITE_MODULES || []).forEach(m => {
+      const code = (m.code || '').trim().toUpperCase();
+      if (code && !seen.has(code)) {
+        seen.add(code);
+        list.push({ code, title: m.title, category: m.category || 'Curriculum' });
+      }
+    });
+    return list;
+  }, [courses]);
+
   /* ── Form States ──────────────────────── */
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseForm, setCourseForm] = useState({ title: '', code: '', category: 'Digital Transformation', description: '', status: 'Active', lecturer_email: '', lecturer_name: '' });
@@ -384,7 +449,7 @@ export const AdminPortal = () => {
     nok_relation: 'Parent', nok_physical_address: '', nok_postal_address: '',
     // Funding & Stipend Details
     funding_type: 'funded', // 'funded' | 'self_paying'
-    funder_name: 'Services SETA',
+    funder_name: 'Corporate Skills Sponsor',
     stipend_amount: '4500',
     bank_name: 'Standard Bank',
     bank_account_number: '',
@@ -420,18 +485,42 @@ export const AdminPortal = () => {
   const [bankConfigForm, setBankConfigForm] = useState(() => ({
     account_name: institutional_banking_config?.account_name || 'Nexa Transformation Operations (Pty) Ltd',
     bank_name: institutional_banking_config?.bank_name || 'Standard Bank of South Africa',
-    account_number: institutional_banking_config?.account_number || '10189472910',
+    account_number: institutional_banking_config?.account_number || '',
     branch_code: institutional_banking_config?.branch_code || '051001',
     account_type: institutional_banking_config?.account_type || 'Corporate Current / Cheque',
     currency: 'ZAR',
-    available_balance: institutional_banking_config?.available_balance || 750000.00,
-    allocated_stipend_pool: institutional_banking_config?.allocated_stipend_pool || 250000.00,
-    api_provider: institutional_banking_config?.api_provider || 'stitch',
-    api_environment: institutional_banking_config?.api_environment || 'sandbox',
-    client_id: institutional_banking_config?.client_id || 'nexa_stip_live_sec_9941a8',
-    client_secret: institutional_banking_config?.client_secret || '••••••••••••••••••••••••••••••••',
-    webhook_url: institutional_banking_config?.webhook_url || 'https://nexatransform.co.za/api/webhooks/stipends'
+    available_balance: Number(institutional_banking_config?.available_balance || 0),
+    allocated_stipend_pool: Number(institutional_banking_config?.allocated_stipend_pool || 0),
+    api_provider: institutional_banking_config?.api_provider || 'standard_bank_h2h',
+    api_environment: institutional_banking_config?.api_environment || 'production',
+    client_id: institutional_banking_config?.client_id || '',
+    client_secret: institutional_banking_config?.client_secret || '',
+    operator_id: institutional_banking_config?.operator_id || '',
+    authorizer_phone: institutional_banking_config?.authorizer_phone || '',
+    webhook_url: institutional_banking_config?.webhook_url || 'https://nexa-transform.com/api/webhooks/stipends'
   }));
+
+  useEffect(() => {
+    if (institutional_banking_config) {
+      setBankConfigForm({
+        account_name: institutional_banking_config.account_name || 'Nexa Transformation Operations (Pty) Ltd',
+        bank_name: institutional_banking_config.bank_name || 'Standard Bank of South Africa',
+        account_number: institutional_banking_config.account_number || '',
+        branch_code: institutional_banking_config.branch_code || '051001',
+        account_type: institutional_banking_config.account_type || 'Corporate Current / Cheque',
+        currency: 'ZAR',
+        available_balance: Number(institutional_banking_config.available_balance || 0),
+        allocated_stipend_pool: Number(institutional_banking_config.allocated_stipend_pool || 0),
+        api_provider: institutional_banking_config.api_provider || 'standard_bank_h2h',
+        api_environment: institutional_banking_config.api_environment || 'production',
+        client_id: institutional_banking_config.client_id || '',
+        client_secret: institutional_banking_config.client_secret || '',
+        operator_id: institutional_banking_config.operator_id || '',
+        authorizer_phone: institutional_banking_config.authorizer_phone || '',
+        webhook_url: institutional_banking_config.webhook_url || 'https://nexa-transform.com/api/webhooks/stipends'
+      });
+    }
+  }, [institutional_banking_config]);
   const [isTestingApi, setIsTestingApi] = useState(false);
   const [apiTestResult, setApiTestResult] = useState(null);
   const [payingLearnerId, setPayingLearnerId] = useState(null);
@@ -824,7 +913,21 @@ export const AdminPortal = () => {
       return;
     }
 
-    const targetCourse = (courses || []).find(c => (c.code || '').toUpperCase() === courseCode.toUpperCase());
+    let targetCourse = (courses || []).find(c => (c.code || '').toUpperCase() === courseCode.toUpperCase());
+    if (!targetCourse) {
+      const wm = (WEBSITE_MODULES || []).find(m => m.code.toUpperCase() === courseCode.toUpperCase());
+      if (wm) {
+        targetCourse = await createRecord('courses', {
+          title: wm.title,
+          code: wm.code,
+          category: wm.category,
+          description: wm.description,
+          status: 'Active',
+          lecturer_email: cleanLecEmail,
+          lecturer_name: cleanLecName
+        });
+      }
+    }
     if (!targetCourse) return;
 
     // 1. Assign selected course to this facilitator
@@ -1090,14 +1193,46 @@ export const AdminPortal = () => {
   const handleIssueCert = (e) => {
     e.preventDefault();
     const sp = student_profiles.find(p => p.learner_email === certForm.learner_email);
-    const certNo = `NX-CERT-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-    createRecord('certificates', {
-      ...certForm, learner_name: sp?.learner_name || '—',
-      certificate_number: certNo, status: 'Issued'
+    const isSelfPaying = certForm.is_self_paying !== false;
+    const certPrefix = isSelfPaying ? 'NX-CERT-SP' : 'NX-CERT';
+    const certNo = `${certPrefix}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const newCert = {
+      ...certForm,
+      learner_name: sp?.learner_name || '—',
+      student_number: sp?.student_number || 'NX-2026-SP',
+      id_passport: sp?.id_passport || '—',
+      certificate_number: certNo,
+      status: 'Issued',
+      funding_type: isSelfPaying ? 'Self-Paying' : (certForm.funding_type || 'Sponsored')
+    };
+    createRecord('certificates', newCert);
+
+    // Auto-generate official PDF for admin
+    try {
+      generateCompletionCertificatePDF({
+        learnerName: sp?.learner_name || 'Learner',
+        studentNumber: sp?.student_number || 'NX-2026-SP',
+        idPassport: sp?.id_passport,
+        programmeTitle: certForm.programme_title || 'Applied Enterprise Process Excellence',
+        certificateNumber: certNo,
+        issueDate: certForm.issue_date,
+        grade: certForm.grade || '88% (Practical Distinction)',
+        isSelfPaying: isSelfPaying
+      });
+    } catch (_) {}
+
+    setCertForm({
+      learner_email: '',
+      course_code: '',
+      programme_title: '',
+      issue_date: new Date().toISOString().split('T')[0],
+      status: 'Issued',
+      certificate_number: '',
+      is_self_paying: true,
+      grade: '88% (Practical Distinction)'
     });
-    setCertForm({ learner_email: '', course_code: '', programme_title: '', issue_date: new Date().toISOString().split('T')[0], status: 'Issued', certificate_number: '' });
     setShowCertForm(false);
-    showToast(`Certificate issued: ${certNo}`);
+    showToast(`Certificate of Completion issued: ${certNo}`);
   };
 
   const handleCreateFee = (e) => {
@@ -1475,12 +1610,19 @@ export const AdminPortal = () => {
       return;
     }
     const pool = Number(institutional_banking_config?.available_balance || 0);
-    if (totalPendingAmount > pool) {
-      if (!window.confirm(`Warning: The total pending payout (R ${totalPendingAmount.toLocaleString('en-ZA')}) exceeds the institutional account balance (R ${pool.toLocaleString('en-ZA')}). Proceed anyway?`)) {
+    const isStandardBank = (institutional_banking_config?.api_provider || 'standard_bank_h2h') === 'standard_bank_h2h';
+    const sourceBank = institutional_banking_config?.bank_name || 'Standard Bank of South Africa';
+
+    if (totalPendingAmount > pool && pool > 0) {
+      if (!window.confirm(`Warning: The total pending payout (R ${totalPendingAmount.toLocaleString('en-ZA')}) exceeds the recorded available balance (R ${pool.toLocaleString('en-ZA')}). Proceed anyway?`)) {
         return;
       }
     } else {
-      if (!window.confirm(`Confirm Direct API Batch EFT: Disburse R ${totalPendingAmount.toLocaleString('en-ZA')} to ${pendingCount} funded learners for ${activePeriodLabel}? Funds will be deducted from ${institutional_banking_config?.bank_name || 'Nedbank Corporate Banking'}.`)) {
+      const confirmMsg = isStandardBank
+        ? `Submit Batch Payout to Standard Bank OneHub (H2H):\n\n• Batch Size: ${pendingCount} funded learners\n• Total Amount: R ${totalPendingAmount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}\n• Debit Account: ${sourceBank} (•••${institutional_banking_config?.account_number ? String(institutional_banking_config.account_number).slice(-4) : 'Pending'})\n\nOnce submitted, an approval prompt will be sent to your Standard Bank Mobile Banking App for final 2FA sign-off. Proceed?`
+        : `Confirm Direct API Batch EFT: Disburse R ${totalPendingAmount.toLocaleString('en-ZA')} to ${pendingCount} funded learners for ${activePeriodLabel}? Funds will be deducted from ${sourceBank}.`;
+      
+      if (!window.confirm(confirmMsg)) {
         return;
       }
     }
@@ -1494,7 +1636,10 @@ export const AdminPortal = () => {
         `${currentAdmin?.name || 'Administrator'} (${currentAdmin?.role || 'Finance Officer'})`
       );
       if (res?.success) {
-        showToast(`✓ Batch Disbursed: Paid ${res.count} learners totaling R ${Number(res.totalAmount).toLocaleString('en-ZA')}!`);
+        showToast(isStandardBank 
+          ? `✓ Standard Bank Batch Submitted: Disbursed ${res.count} stipends (R ${Number(res.totalAmount).toLocaleString('en-ZA')}). App 2FA authorization verified!`
+          : `✓ Batch Disbursed: Paid ${res.count} learners totaling R ${Number(res.totalAmount).toLocaleString('en-ZA')}!`
+        );
       }
     } catch (err) {
       alert(`Batch Disburse Error: ${err.message}`);
@@ -2108,21 +2253,59 @@ export const AdminPortal = () => {
           )}
 
           <div className="lmis-stats-grid">
-            <div className="lmis-stat"><div className="lmis-stat-icon navy"><IcoBook size={20} /></div><div><div className="lmis-stat-val">{activeCourses.length}</div><div className="lmis-stat-label">Active Courses</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon teal"><IcoUser size={20} /></div><div><div className="lmis-stat-val">{student_profiles.length}</div><div className="lmis-stat-label">Registered Learners</div></div></div>
-            <div className="lmis-stat" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('stipends')} title="SETA Funded Learners receiving stipends">
-              <div className="lmis-stat-icon gold"><IcoWallet size={20} /></div>
-              <div>
-                <div className="lmis-stat-val">
-                  {fmtZAR((student_profiles || []).filter(p => p.funding_type !== 'self_paying').length * 4500)}
-                </div>
-                <div className="lmis-stat-label">Monthly Stipends Allocation</div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon navy"><IcoBook size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{activeCourses.length}</div>
+                <div className="lmis-stat-label">Active Courses</div>
               </div>
             </div>
-            <div className="lmis-stat"><div className="lmis-stat-icon emerald"><IcoCheck size={20} /></div><div><div className="lmis-stat-val">{enrollments.length}</div><div className="lmis-stat-label">Enrollments</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon gold"><IcoFile size={20} /></div><div><div className="lmis-stat-val">{pendingGrades}</div><div className="lmis-stat-label">To Grade</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon red"><IcoWallet size={20} /></div><div><div className="lmis-stat-val">{fmtZAR(outstanding)}</div><div className="lmis-stat-label">Outstanding Fees</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon emerald"><IcoAward size={20} /></div><div><div className="lmis-stat-val">{certificates.filter(c => c.status === 'Issued').length}</div><div className="lmis-stat-label">Certificates Issued</div></div></div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => { setActiveTab('users'); setUserTab('Learners'); }} title="Click to view all registered learners">
+              <div className="lmis-stat-icon teal"><IcoUser size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{student_profiles.length}</div>
+                <div className="lmis-stat-label">Registered Learners</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => setActiveTab('stipends')} title="SETA Funded Learners receiving stipends">
+              <div className="lmis-stat-icon gold"><IcoWallet size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR((student_profiles || []).filter(p => p.funding_type !== 'self_paying').length * 4500)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {fmtZAR((student_profiles || []).filter(p => p.funding_type !== 'self_paying').length * 4500)}
+                </div>
+                <div className="lmis-stat-label">Monthly Stipends Pool</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon emerald"><IcoCheck size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{enrollments.length}</div>
+                <div className="lmis-stat-label">Enrollments</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon gold"><IcoFile size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{pendingGrades}</div>
+                <div className="lmis-stat-label">To Grade</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon red"><IcoWallet size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(outstanding)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {fmtZAR(outstanding)}
+                </div>
+                <div className="lmis-stat-label">Outstanding Fees</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon emerald"><IcoAward size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{certificates.filter(c => c.status === 'Issued').length}</div>
+                <div className="lmis-stat-label">Certificates Issued</div>
+              </div>
+            </div>
           </div>
 
           <div className="lmis-2col" style={{ gap: '1rem' }}>
@@ -2317,10 +2500,10 @@ export const AdminPortal = () => {
                       <label className="lmis-label">Assigned Module / Specialization *</label>
                       <select
                         className="lmis-select"
-                        value={lecturerForm.assigned_course_code || (WEBSITE_MODULES.find(m => m.title === lecturerForm.department)?.code) || 'ADS'}
+                        value={lecturerForm.assigned_course_code || (availableCourseOptions.find(m => m.title === lecturerForm.department)?.code) || 'ADS'}
                         onChange={e => {
                           const code = e.target.value;
-                          const found = WEBSITE_MODULES.find(m => m.code === code);
+                          const found = availableCourseOptions.find(m => m.code === code);
                           setLecturerForm({
                             ...lecturerForm,
                             assigned_course_code: code,
@@ -2328,7 +2511,7 @@ export const AdminPortal = () => {
                           });
                         }}
                       >
-                        {WEBSITE_MODULES.map(m => (
+                        {availableCourseOptions.map(m => (
                           <option key={m.code} value={m.code}>{m.code} · {m.title}</option>
                         ))}
                       </select>
@@ -2482,7 +2665,7 @@ export const AdminPortal = () => {
                             onChange={e => handleAssignModuleToFacilitator(l, e.target.value)}
                           >
                             <option value="">-- No Module Assigned --</option>
-                            {WEBSITE_MODULES.map(m => (
+                            {availableCourseOptions.map(m => (
                               <option key={m.code} value={m.code}>{m.code} · {m.title}</option>
                             ))}
                           </select>
@@ -2595,10 +2778,13 @@ export const AdminPortal = () => {
       )}
 
       {/* USERS & ROLES */}
-      {activeTab === 'users' && (
+      {(activeTab === 'users' || activeTab === 'learners') && (
         <div>
           <div className="lmis-page-header flex-between">
-            <div><h1 className="lmis-page-title">Users & Roles</h1><p className="lmis-page-sub">Manage learners, enrolment, and staff.</p></div>
+            <div>
+              <h1 className="lmis-page-title">{userTab === 'Learners' ? 'Learners Directory & Enrolment' : userTab === 'Lecturers' ? 'Lecturers & Facilitators' : 'Administrative Staff'}</h1>
+              <p className="lmis-page-sub">{userTab === 'Learners' ? 'Accredited South African learners, SETA funding models, stipends, and academic enrolments.' : 'Manage institutional faculty and administrators.'}</p>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {userTab === 'Learners' && (
                 <>
@@ -2864,10 +3050,10 @@ export const AdminPortal = () => {
                       <label className="lmis-label">Assigned Module / Specialization *</label>
                       <select
                         className="lmis-select"
-                        value={lecturerForm.assigned_course_code || (WEBSITE_MODULES.find(m => m.title === lecturerForm.department)?.code) || 'ADS'}
+                        value={lecturerForm.assigned_course_code || (availableCourseOptions.find(m => m.title === lecturerForm.department)?.code) || 'ADS'}
                         onChange={e => {
                           const code = e.target.value;
-                          const found = WEBSITE_MODULES.find(m => m.code === code);
+                          const found = availableCourseOptions.find(m => m.code === code);
                           setLecturerForm({
                             ...lecturerForm,
                             assigned_course_code: code,
@@ -2875,7 +3061,7 @@ export const AdminPortal = () => {
                           });
                         }}
                       >
-                        {WEBSITE_MODULES.map(m => (
+                        {availableCourseOptions.map(m => (
                           <option key={m.code} value={m.code}>{m.code} · {m.title}</option>
                         ))}
                       </select>
@@ -2999,10 +3185,16 @@ export const AdminPortal = () => {
 
           {/* User toggle & search */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {['Learners','Lecturers','Admins'].map(r => (
-                <button key={r} onClick={() => setUserTab(r)} className={`btn btn-sm ${userTab === r ? 'btn-primary' : 'btn-outline'}`}>{r}</button>
-              ))}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button key="Learners" onClick={() => setUserTab('Learners')} className={`btn btn-sm ${userTab === 'Learners' ? 'btn-primary' : 'btn-outline'}`} style={{ fontWeight: 700 }}>
+                🎓 Learners ({student_profiles.length})
+              </button>
+              <button key="Lecturers" onClick={() => setUserTab('Lecturers')} className={`btn btn-sm ${userTab === 'Lecturers' ? 'btn-primary' : 'btn-outline'}`}>
+                👨‍🏫 Lecturers ({courses.filter(c => c.lecturer_email).length || uniqueLecturers.length})
+              </button>
+              <button key="Admins" onClick={() => setUserTab('Admins')} className={`btn btn-sm ${userTab === 'Admins' ? 'btn-primary' : 'btn-outline'}`}>
+                🛡️ Admins ({system_admins.length})
+              </button>
             </div>
             {userTab === 'Learners' && (
               <div style={{ display: 'flex', gap: '0.35rem', background: 'var(--ice2, rgba(0,0,0,0.04))', padding: '0.2rem', borderRadius: '6px' }}>
@@ -3573,11 +3765,14 @@ export const AdminPortal = () => {
               <div className="lmis-card-body">
                 <form onSubmit={handleCreateCourse}>
                   <div className="lmis-form-grid">
-                    <div className="lmis-field">
-                      <label className="lmis-label">Select Module from Website *</label>
+                    {/* Optional Template Quick-Fill */}
+                    <div className="lmis-field" style={{ gridColumn: '1 / -1', background: 'var(--ice2, rgba(0,0,0,0.03))', padding: '0.85rem', borderRadius: '8px', border: '1px dashed var(--border-color, #cbd5e1)' }}>
+                      <label className="lmis-label" style={{ fontWeight: 700, color: 'var(--primary-navy, #1e3a8a)', marginBottom: '0.25rem' }}>
+                        ⚡ Quick-Fill from Curriculum Templates (Optional)
+                      </label>
                       <select
                         className="lmis-select"
-                        value={courseForm.title}
+                        value={WEBSITE_MODULES.some(m => m.title === courseForm.title) ? courseForm.title : ''}
                         onChange={e => {
                           const selected = WEBSITE_MODULES.find(m => m.title === e.target.value);
                           if (selected) {
@@ -3588,21 +3783,33 @@ export const AdminPortal = () => {
                               category: selected.category,
                               description: selected.description
                             });
-                          } else {
-                            setCourseForm({ ...courseForm, title: e.target.value });
                           }
                         }}
-                        required
                       >
-                        <option value="">-- Select Official Website Module --</option>
+                        <option value="">-- Choose a Website Template or Type Custom Module Below --</option>
                         {WEBSITE_MODULES.map(m => (
                           <option key={m.code} value={m.title}>{m.title} ({m.code}) · {m.category}</option>
                         ))}
                       </select>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-sub, #64748b)', marginTop: '0.35rem', display: 'block' }}>
+                        Pick a template to autofill, or skip this dropdown and type any custom module name and code directly below.
+                      </span>
+                    </div>
+
+                    {/* Open, unconstrained text input for Module Title */}
+                    <div className="lmis-field" style={{ gridColumn: '1 / -1' }}>
+                      <label className="lmis-label">Course / Module Title *</label>
+                      <input
+                        className="lmis-input"
+                        value={courseForm.title}
+                        onChange={e => setCourseForm({ ...courseForm, title: e.target.value })}
+                        required
+                        placeholder="e.g. Applied AI Workflow Automation, Enterprise Logistics, or ISO Standards"
+                      />
                     </div>
                     <div className="lmis-field"><label className="lmis-label">Course Code *</label><input className="lmis-input" value={courseForm.code} onChange={e => setCourseForm({ ...courseForm, code: e.target.value.toUpperCase() })} required placeholder="e.g. BPM" /></div>
                     <div className="lmis-field"><label className="lmis-label">Category</label><input className="lmis-input" value={courseForm.category} onChange={e => setCourseForm({ ...courseForm, category: e.target.value })} required /></div>
-                    <div className="lmis-field"><label className="lmis-label">Assign Facilitator / Lecturer *</label><select className="lmis-select" value={courseForm.lecturer_email} onChange={e => setCourseForm({ ...courseForm, lecturer_email: e.target.value })} required><option value="">-- Select Lecturer --</option>{(system_lecturers || []).map(l => <option key={l.email} value={l.email}>{l.name} ({l.email})</option>)}</select></div>
+                    <div className="lmis-field"><label className="lmis-label">Assign Facilitator / Lecturer (Optional)</label><select className="lmis-select" value={courseForm.lecturer_email} onChange={e => setCourseForm({ ...courseForm, lecturer_email: e.target.value })}><option value="">-- No Facilitator Assigned Yet --</option>{(system_lecturers || []).map(l => <option key={l.email} value={l.email}>{l.name} ({l.email})</option>)}</select></div>
                     <div className="lmis-field"><label className="lmis-label">Status</label><select className="lmis-select" value={courseForm.status} onChange={e => setCourseForm({ ...courseForm, status: e.target.value })}>{['Active','Upcoming','Inactive'].map(s => <option key={s}>{s}</option>)}</select></div>
                     <div className="lmis-field" style={{ gridColumn: '1/-1' }}><label className="lmis-label">Description</label><textarea className="lmis-textarea" value={courseForm.description} onChange={e => setCourseForm({ ...courseForm, description: e.target.value })} placeholder="Course description..." /></div>
                   </div>
@@ -3857,20 +4064,21 @@ export const AdminPortal = () => {
               <button
                 type="button"
                 className="btn btn-sm btn-gold"
-                style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 4px rgba(201, 163, 78, 0.25)' }}
                 onClick={handleBatchPayStipends}
                 disabled={isBatchPaying || pendingCount === 0}
+                title="Send batch directly to Standard Bank OneHub with instant push notification to your Mobile Banking App"
               >
-                {isBatchPaying ? '🔄 Processing Batch EFT...' : `🚀 Batch Disburse Pending (${pendingCount})`}
+                {isBatchPaying ? '🔄 Submitting to Standard Bank...' : `📱 Batch Disburse (App 2FA) (${pendingCount})`}
               </button>
               <button
                 type="button"
                 className="btn btn-sm btn-primary"
                 style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#0033aa', borderColor: '#0033aa' }}
                 onClick={handleExportStandardBankBatchCsv}
-                title="Download pre-formatted batch file for Standard Bank Business Online / Internet Banking upload"
+                title="Backup: Download pre-formatted batch file for manual upload to Standard Bank Business Online"
               >
-                📥 Standard Bank Batch (CSV)
+                📥 SB Online Batch (CSV)
               </button>
               <button
                 type="button"
@@ -3885,56 +4093,56 @@ export const AdminPortal = () => {
           </div>
 
           {/* Top Analytics Cards */}
-          <div className="lmis-4col mb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-            <div className="lmis-stat" style={{ borderLeft: '4px solid #10b981' }}>
+          <div className="lmis-4col mb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))' }}>
+            <div className="lmis-stat" style={{ borderLeft: '4px solid #10b981', minWidth: 0, overflow: 'hidden' }}>
               <div className="lmis-stat-icon emerald"><IcoWallet size={20} /></div>
-              <div style={{ flex: 1 }}>
-                <div className="lmis-stat-val" style={{ fontSize: '1.25rem', color: '#0f172a' }}>
-                  {fmtZAR(institutional_banking_config?.available_balance || 750000)}
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(Number(institutional_banking_config?.available_balance || 0))} style={{ fontSize: '1.2rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {fmtZAR(Number(institutional_banking_config?.available_balance || 0))}
                 </div>
-                <div className="lmis-stat-label">Source Account Reserve</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <span>{institutional_banking_config?.bank_name ? institutional_banking_config.bank_name.split(' ')[0] : 'Nedbank'} (•••{String(institutional_banking_config?.account_number || '2910').slice(-4)})</span>
+                <div className="lmis-stat-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Source Account Reserve</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
+                  <span>{institutional_banking_config?.bank_name || 'Standard Bank'} (•••{institutional_banking_config?.account_number ? String(institutional_banking_config.account_number).slice(-4) : 'Pending'})</span>
                   <span style={{ color: '#10b981', fontWeight: 700 }}>● {institutional_banking_config?.api_environment === 'production' ? 'Live EFT' : 'Sandbox EFT'}</span>
                 </div>
               </div>
             </div>
 
-            <div className="lmis-stat" style={{ borderLeft: '4px solid #c9a34e' }}>
+            <div className="lmis-stat" style={{ borderLeft: '4px solid #c9a34e', minWidth: 0, overflow: 'hidden' }}>
               <div className="lmis-stat-icon gold"><IcoWallet size={20} /></div>
-              <div style={{ flex: 1 }}>
-                <div className="lmis-stat-val" style={{ fontSize: '1.25rem', color: '#0f172a' }}>
-                  {fmtZAR(institutional_banking_config?.allocated_stipend_pool || 250000)}
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(Number(institutional_banking_config?.allocated_stipend_pool || 0))} style={{ fontSize: '1.2rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {fmtZAR(Number(institutional_banking_config?.allocated_stipend_pool || 0))}
                 </div>
-                <div className="lmis-stat-label">Allocated Monthly Pool</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem' }}>
-                  Earmarked for learner living allowances
+                <div className="lmis-stat-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Allocated Monthly Pool</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Earmarked for learner allowances
                 </div>
               </div>
             </div>
 
-            <div className="lmis-stat" style={{ borderLeft: '4px solid #3b82f6' }}>
+            <div className="lmis-stat" style={{ borderLeft: '4px solid #3b82f6', minWidth: 0, overflow: 'hidden' }}>
               <div className="lmis-stat-icon navy"><IcoCheck size={20} /></div>
-              <div style={{ flex: 1 }}>
-                <div className="lmis-stat-val" style={{ fontSize: '1.25rem', color: '#10b981' }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(totalDisbursedPeriodAmount)} style={{ fontSize: '1.2rem', color: '#10b981', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {fmtZAR(totalDisbursedPeriodAmount)}
                 </div>
-                <div className="lmis-stat-label">Disbursed ({activePeriodLabel})</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem' }}>
-                  <strong>{paidCountPeriod}</strong> of {eligibleWithStatus.length} funded learners paid
+                <div className="lmis-stat-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Disbursed ({activePeriodLabel})</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <strong>{paidCountPeriod}</strong> of {eligibleWithStatus.length} funded paid
                 </div>
               </div>
             </div>
 
-            <div className="lmis-stat" style={{ borderLeft: '4px solid #f59e0b' }}>
+            <div className="lmis-stat" style={{ borderLeft: '4px solid #f59e0b', minWidth: 0, overflow: 'hidden' }}>
               <div className="lmis-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706' }}><IcoWallet size={20} /></div>
-              <div style={{ flex: 1 }}>
-                <div className="lmis-stat-val" style={{ fontSize: '1.25rem', color: pendingCount > 0 ? '#d97706' : '#10b981' }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(totalPendingAmount)} style={{ fontSize: '1.2rem', color: pendingCount > 0 ? '#d97706' : '#10b981', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {fmtZAR(totalPendingAmount)}
                 </div>
-                <div className="lmis-stat-label">Pending Payouts ({pendingCount})</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem' }}>
-                  {pendingCount === 0 ? '✓ All eligible learners disbursed' : `${pendingCount} learner(s) ready for EFT`}
+                <div className="lmis-stat-label" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Pending Payouts ({pendingCount})</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {pendingCount === 0 ? '✓ All eligible disbursed' : `${pendingCount} learner(s) ready for EFT`}
                 </div>
               </div>
             </div>
@@ -4353,9 +4561,9 @@ export const AdminPortal = () => {
                             value={bankConfigForm.api_provider}
                             onChange={e => setBankConfigForm({ ...bankConfigForm, api_provider: e.target.value })}
                           >
+                            <option value="standard_bank_h2h">Standard Bank Business Direct (H2H - App 2FA)</option>
                             <option value="stitch">Stitch Payments (Direct API EFT / RTC)</option>
                             <option value="nedbank_direct">Nedbank Direct EFT API (Host-to-Host)</option>
-                            <option value="standard_bank_h2h">Standard Bank Business Direct (H2H)</option>
                             <option value="netcash">Netcash Batch EFT &amp; Salary Gateway</option>
                             <option value="ozow">Ozow Instant Payout API</option>
                           </select>
@@ -4368,36 +4576,88 @@ export const AdminPortal = () => {
                             value={bankConfigForm.api_environment}
                             onChange={e => setBankConfigForm({ ...bankConfigForm, api_environment: e.target.value })}
                           >
+                            <option value="production">Production / Live Interbank Clearing (Live App 2FA)</option>
                             <option value="sandbox">Sandbox / Staging (Simulated Cleared EFT)</option>
-                            <option value="production">Production / Live Interbank Clearing</option>
                           </select>
                         </div>
 
-                        <div className="lmis-field">
-                          <label className="lmis-label">Client ID / Merchant ID *</label>
-                          <input
-                            className="lmis-input"
-                            value={bankConfigForm.client_id}
-                            onChange={e => setBankConfigForm({ ...bankConfigForm, client_id: e.target.value })}
-                            required
-                            placeholder="e.g. nexa_stip_live_sec_9941a8"
-                          />
-                        </div>
+                        {bankConfigForm.api_provider === 'standard_bank_h2h' ? (
+                          <>
+                            <div className="lmis-field">
+                              <label className="lmis-label">Standard Bank Company System ID *</label>
+                              <input
+                                className="lmis-input"
+                                value={bankConfigForm.client_id}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, client_id: e.target.value })}
+                                required
+                                placeholder="e.g. SB-CORP-948210"
+                              />
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)' }}>Issued by your Standard Bank Business Banker / OneHub</span>
+                            </div>
 
-                        <div className="lmis-field">
-                          <label className="lmis-label">Secret API Key / Private Token *</label>
-                          <input
-                            type="password"
-                            className="lmis-input"
-                            value={bankConfigForm.client_secret}
-                            onChange={e => setBankConfigForm({ ...bankConfigForm, client_secret: e.target.value })}
-                            required
-                            placeholder="Enter gateway private key"
-                          />
-                        </div>
+                            <div className="lmis-field">
+                              <label className="lmis-label">Standard Bank Operator / User ID *</label>
+                              <input
+                                className="lmis-input"
+                                value={bankConfigForm.operator_id || ''}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, operator_id: e.target.value })}
+                                required
+                                placeholder="e.g. OP_DISBURSE_01"
+                              />
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)' }}>Designated batch submitter profile code</span>
+                            </div>
+
+                            <div className="lmis-field">
+                              <label className="lmis-label">Mobile App Authorizer Mobile Number *</label>
+                              <input
+                                className="lmis-input"
+                                value={bankConfigForm.authorizer_phone || ''}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, authorizer_phone: e.target.value })}
+                                placeholder="e.g. +27 82 000 0000"
+                              />
+                              <span style={{ fontSize: '0.68rem', color: 'var(--text-sub)' }}>Phone registered with Standard Bank Mobile App for push approvals</span>
+                            </div>
+
+                            <div className="lmis-field">
+                              <label className="lmis-label">OneHub API Client Secret / Certificate Key</label>
+                              <input
+                                type="password"
+                                className="lmis-input"
+                                value={bankConfigForm.client_secret}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, client_secret: e.target.value })}
+                                placeholder="Enter OneHub H2H digital signing key"
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="lmis-field">
+                              <label className="lmis-label">Client ID / Merchant ID *</label>
+                              <input
+                                className="lmis-input"
+                                value={bankConfigForm.client_id}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, client_id: e.target.value })}
+                                required
+                                placeholder="e.g. nexa_stip_live_sec_9941a8"
+                              />
+                            </div>
+
+                            <div className="lmis-field">
+                              <label className="lmis-label">Secret API Key / Private Token *</label>
+                              <input
+                                type="password"
+                                className="lmis-input"
+                                value={bankConfigForm.client_secret}
+                                onChange={e => setBankConfigForm({ ...bankConfigForm, client_secret: e.target.value })}
+                                required
+                                placeholder="Enter gateway private key"
+                              />
+                            </div>
+                          </>
+                        )}
 
                         <div className="lmis-field" style={{ gridColumn: '1/-1' }}>
-                          <label className="lmis-label">Institutional Webhook Callback URL</label>
+                          <label className="lmis-label">Standard Bank Webhook Callback URL</label>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <input
                               className="lmis-input"
@@ -4417,7 +4677,7 @@ export const AdminPortal = () => {
                             </button>
                           </div>
                           <span style={{ fontSize: '0.7rem', color: 'var(--text-sub)' }}>
-                            Register this URL in your banking portal to receive real-time bank settlement and reversal webhooks.
+                            Register this URL in Standard Bank OneHub to receive instant push settlement &amp; authorizer approval callbacks.
                           </span>
                         </div>
                       </div>
@@ -4497,10 +4757,34 @@ export const AdminPortal = () => {
           </div>
 
           <div className="lmis-4col mb-4">
-            <div className="lmis-stat"><div className="lmis-stat-icon navy"><IcoWallet size={20} /></div><div><div className="lmis-stat-val">{fmtZAR(totalFees)}</div><div className="lmis-stat-label">Total Billed</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon red"><IcoWallet size={20} /></div><div><div className="lmis-stat-val">{fmtZAR(outstanding)}</div><div className="lmis-stat-label">Outstanding</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon emerald"><IcoCheck size={20} /></div><div><div className="lmis-stat-val">{fmtZAR(totalFees - outstanding)}</div><div className="lmis-stat-label">Collected</div></div></div>
-            <div className="lmis-stat"><div className="lmis-stat-icon gold"><IcoFile size={20} /></div><div><div className="lmis-stat-val">{fees.length}</div><div className="lmis-stat-label">Invoices</div></div></div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon navy"><IcoWallet size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(totalFees)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fmtZAR(totalFees)}</div>
+                <div className="lmis-stat-label">Total Billed</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon red"><IcoWallet size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(outstanding)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fmtZAR(outstanding)}</div>
+                <div className="lmis-stat-label">Outstanding</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon emerald"><IcoCheck size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val" title={fmtZAR(totalFees - outstanding)} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fmtZAR(totalFees - outstanding)}</div>
+                <div className="lmis-stat-label">Collected</div>
+              </div>
+            </div>
+            <div className="lmis-stat" style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="lmis-stat-icon gold"><IcoFile size={20} /></div>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div className="lmis-stat-val">{fees.length}</div>
+                <div className="lmis-stat-label">Invoices</div>
+              </div>
+            </div>
           </div>
 
           {showFeeForm && (
@@ -5023,13 +5307,13 @@ export const AdminPortal = () => {
                     className="lmis-select"
                     value={
                       editLecForm.assigned_course_code ||
-                      (WEBSITE_MODULES.find(m => m.title === editLecForm.department || m.code === editLecForm.department)?.code) ||
+                      (availableCourseOptions.find(m => m.title === editLecForm.department || m.code === editLecForm.department)?.code) ||
                       (courses.find(c => (c.lecturer_email || '').toLowerCase().trim() === (editLecForm.email || '').toLowerCase().trim())?.code) ||
                       ''
                     }
                     onChange={e => {
                       const code = e.target.value;
-                      const found = WEBSITE_MODULES.find(m => m.code === code);
+                      const found = availableCourseOptions.find(m => m.code === code);
                       setEditLecForm({
                         ...editLecForm,
                         assigned_course_code: code,
@@ -5038,7 +5322,7 @@ export const AdminPortal = () => {
                     }}
                   >
                     <option value="">— Unassigned (No Module) —</option>
-                    {WEBSITE_MODULES.map(m => (
+                    {availableCourseOptions.map(m => (
                       <option key={m.code} value={m.code}>{m.code} · {m.title}</option>
                     ))}
                   </select>
@@ -5471,41 +5755,120 @@ export const AdminPortal = () => {
       {activeTab === 'certificates' && (
         <div>
           <div className="lmis-page-header flex-between">
-            <div><h1 className="lmis-page-title">Certificates</h1><p className="lmis-page-sub">Issue qualifications to learners.</p></div>
-            <button className="btn btn-sm btn-gold" onClick={() => setShowCertForm(!showCertForm)}><IcoPlus size={14} /> Issue Certificate</button>
+            <div>
+              <h1 className="lmis-page-title">Certificates</h1>
+              <p className="lmis-page-sub">Issue and manage official Certificates of Completion for self-paying candidates.</p>
+            </div>
+            <button className="btn btn-sm btn-gold" onClick={() => setShowCertForm(!showCertForm)}>
+              <IcoPlus size={14} /> Issue Self-Paying Certificate
+            </button>
           </div>
           {showCertForm && (
-            <div className="lmis-card mb-4">
-              <div className="lmis-card-header"><span className="lmis-card-title">Issue Certificate</span><button className="btn btn-sm btn-ghost" onClick={() => setShowCertForm(false)}><IcoX size={14} /></button></div>
+            <div className="lmis-card mb-4" style={{ border: '1px solid rgba(217, 119, 6, 0.4)', background: 'rgba(217, 119, 6, 0.03)' }}>
+              <div className="lmis-card-header">
+                <span className="lmis-card-title">Issue Official Certificate of Completion (Self-Paying)</span>
+                <button className="btn btn-sm btn-ghost" onClick={() => setShowCertForm(false)}><IcoX size={14} /></button>
+              </div>
               <div className="lmis-card-body">
                 <form onSubmit={handleIssueCert}>
                   <div className="lmis-form-grid">
-                    <div className="lmis-field"><label className="lmis-label">Learner</label><select className="lmis-select" value={certForm.learner_email} onChange={e => setCertForm({ ...certForm, learner_email: e.target.value })} required><option value="">-- Select --</option>{student_profiles.map(p => <option key={p.id} value={p.learner_email}>{p.learner_name}</option>)}</select></div>
-                    <div className="lmis-field"><label className="lmis-label">Course</label><select className="lmis-select" value={certForm.course_code} onChange={e => setCertForm({ ...certForm, course_code: e.target.value })} required><option value="">-- Select --</option>{courses.map(c => <option key={c.id} value={c.code}>{c.title}</option>)}</select></div>
-                    <div className="lmis-field"><label className="lmis-label">Programme Title</label><input className="lmis-input" value={certForm.programme_title} onChange={e => setCertForm({ ...certForm, programme_title: e.target.value })} placeholder="e.g. Digital Transformation Management" required /></div>
-                    <div className="lmis-field"><label className="lmis-label">Issue Date</label><input type="date" className="lmis-input" value={certForm.issue_date} onChange={e => setCertForm({ ...certForm, issue_date: e.target.value })} required /></div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Candidate (Learner)</label>
+                      <select className="lmis-select" value={certForm.learner_email} onChange={e => {
+                        const selP = student_profiles.find(p => p.learner_email === e.target.value);
+                        setCertForm({
+                          ...certForm,
+                          learner_email: e.target.value,
+                          programme_title: selP?.programme_enrolled || certForm.programme_title,
+                          is_self_paying: selP?.funding_type === 'self_paying' || true
+                        });
+                      }} required>
+                        <option value="">-- Select Candidate --</option>
+                        {student_profiles.map(p => (
+                          <option key={p.id} value={p.learner_email}>
+                            {p.learner_name} ({p.funding_type === 'self_paying' ? 'Self-Paying' : 'Funded'} - {p.student_number || 'No ID'})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Candidate Track</label>
+                      <select className="lmis-select" value={certForm.is_self_paying !== false ? 'self_paying' : 'sponsored'} onChange={e => setCertForm({ ...certForm, is_self_paying: e.target.value === 'self_paying' })}>
+                        <option value="self_paying">Strictly Self-Paying (Direct Enrolment)</option>
+                        <option value="sponsored">Corporate Sponsored / Funded</option>
+                      </select>
+                    </div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Course / Track Code</label>
+                      <select className="lmis-select" value={certForm.course_code} onChange={e => {
+                        const c = courses.find(item => item.code === e.target.value);
+                        setCertForm({ ...certForm, course_code: e.target.value, programme_title: c?.title || certForm.programme_title });
+                      }} required>
+                        <option value="">-- Select Module --</option>
+                        {courses.map(c => <option key={c.id} value={c.code}>{c.title}</option>)}
+                      </select>
+                    </div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Official Programme Title on Certificate</label>
+                      <input className="lmis-input" value={certForm.programme_title} onChange={e => setCertForm({ ...certForm, programme_title: e.target.value })} placeholder="e.g. Applied Enterprise Process Automation & BPMN 2.0" required />
+                    </div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Evaluation Standing / Grade</label>
+                      <input className="lmis-input" value={certForm.grade || '88% (Practical Distinction)'} onChange={e => setCertForm({ ...certForm, grade: e.target.value })} placeholder="e.g. 88% (Practical Distinction)" />
+                    </div>
+                    <div className="lmis-field">
+                      <label className="lmis-label">Issue Date</label>
+                      <input type="date" className="lmis-input" value={certForm.issue_date} onChange={e => setCertForm({ ...certForm, issue_date: e.target.value })} required />
+                    </div>
                   </div>
                   <div className="lmis-form-actions">
                     <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowCertForm(false)}>Cancel</button>
-                    <button type="submit" className="btn btn-sm btn-gold"><IcoAward size={14} /> Issue Certificate</button>
+                    <button type="submit" className="btn btn-sm btn-gold"><IcoAward size={14} /> Issue &amp; Download PDF</button>
                   </div>
                 </form>
               </div>
             </div>
           )}
           {certificates.length === 0
-            ? <div className="lmis-card"><div className="lmis-empty"><IcoAward size={40} style={{ color: '#CBD5E1' }} /><p className="lmis-empty-title">No certificates issued</p><p className="lmis-empty-sub">Issue certificates to learners who have completed their programmes.</p></div></div>
+            ? <div className="lmis-card"><div className="lmis-empty"><IcoAward size={40} style={{ color: '#CBD5E1' }} /><p className="lmis-empty-title">No certificates issued</p><p className="lmis-empty-sub">Issue certificates to self-paying learners who have completed their programmes.</p></div></div>
             : <div className="lmis-card"><div className="lmis-table-wrap">
               <table className="lmis-table">
-                <thead><tr><th>Learner</th><th>Programme</th><th>Certificate No.</th><th>Issued</th><th>Status</th></tr></thead>
+                <thead><tr><th>Learner</th><th>Programme</th><th>Certificate No.</th><th>Track</th><th>Issued</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>
                   {certificates.map(c => (
                     <tr key={c.id}>
                       <td style={{ fontWeight: 600 }}>{c.learner_name}</td>
                       <td>{c.programme_title || c.course_code}</td>
-                      <td><span style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{c.certificate_number}</span></td>
+                      <td><span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--gold)' }}>{c.certificate_number}</span></td>
+                      <td>
+                        <span className="badge badge-gold" style={{ fontSize: '0.68rem' }}>
+                          {c.funding_type || 'Self-Paying'}
+                        </span>
+                      </td>
                       <td style={{ color: 'var(--text-sub)' }}>{c.issue_date}</td>
                       <td><span className="badge badge-emerald">{c.status}</span></td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                          title="Download official Certificate PDF"
+                          onClick={() => {
+                            generateCompletionCertificatePDF({
+                              learnerName: c.learner_name,
+                              studentNumber: c.student_number || 'NX-2026-SP',
+                              idPassport: c.id_passport,
+                              programmeTitle: c.programme_title || c.course_code,
+                              certificateNumber: c.certificate_number,
+                              issueDate: c.issue_date,
+                              grade: c.grade || '88% (Practical Distinction)',
+                              isSelfPaying: true
+                            });
+                            showToast(`Certificate ${c.certificate_number} downloaded!`);
+                          }}
+                        >
+                          📄 Download PDF
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

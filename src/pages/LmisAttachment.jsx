@@ -27,6 +27,17 @@ const fmtBytes = (b) => b < 1024 ? `${b}B` : b < 1024 * 1024 ? `${(b / 1024).toF
 /* Max size: 50MB for video and PowerPoint presentations */
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
+/* Enterprise Security: Strict whitelist and blacklist for uploaded file assets */
+const FORBIDDEN_EXTENSIONS = new Set([
+  'exe', 'bat', 'cmd', 'sh', 'php', 'phtml', 'py', 'pl', 'jsp', 'asp', 'aspx', 'cgi',
+  'com', 'vbs', 'scr', 'msi', 'bin', 'jar', 'apk', 'ps1', 'action', 'dll', 'reg', 'htm', 'html', 'js', 'mjs'
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+  'pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'rtf',
+  'mp4', 'webm', 'mov', 'mp3', 'wav', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'zip'
+]);
+
 /* ─── Attachment Zone (upload + display) ────── */
 export const FileAttachmentZone = ({
   attachments = [],
@@ -69,14 +80,27 @@ export const FileAttachmentZone = ({
 
     for (let file of incoming) {
       if (file.size > MAX_FILE_BYTES) {
-        setErr(`"${file.name}" is ${fmtBytes(file.size)} — over the ${fmtBytes(MAX_FILE_BYTES)} limit.`);
+        setErr(`"${file.name}" is ${fmtBytes(file.size)} — exceeds the institutional ${fmtBytes(MAX_FILE_BYTES)} limit.`);
         continue;
       }
 
-      // Format path: prefix/timestamp_filename
-      const fileExt = file.name.split('.').pop();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30) + '.' + fileExt;
-      const path = `${filePathPrefix}/${Date.now()}_${sanitizedName}`;
+      const fileExt = (file.name.split('.').pop() || '').toLowerCase().trim();
+
+      // Security Check: Block dangerous executables and verify against academic whitelist
+      if (FORBIDDEN_EXTENSIONS.has(fileExt)) {
+        setErr(`Security Policy: Executable, script, or binary files (.${fileExt}) are strictly blocked to safeguard institutional servers.`);
+        continue;
+      }
+
+      if (!ALLOWED_EXTENSIONS.has(fileExt)) {
+        setErr(`Unsupported Format: The file type (.${fileExt}) is not allowed. Please upload standard academic files (PDF, DOCX, PPTX, XLSX, MP4, or Images).`);
+        continue;
+      }
+
+      // Format path: prefix/timestamp_sanitized_name (strips path traversals and special chars)
+      const sanitizedBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 32);
+      const sanitizedName = `${sanitizedBase}.${fileExt}`;
+      const path = `${filePathPrefix.replace(/[^a-zA-Z0-9/_-]/g, '')}/${Date.now()}_${sanitizedName}`;
 
       let storagePath = null;
       let publicUrl = null;

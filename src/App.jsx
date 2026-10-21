@@ -7,15 +7,15 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+import { TenantProvider } from './context/TenantContext';
+
 // Pages
 import {
   Home, About, Services, TrainingAcademy, InnovationLab,
   Ecosystem, Resources, Insights, Contact, Admin, DeveloperDashboard,
   LearnerPortal, LecturerPortal, LecturerRegistration, AdminPortal, LmisPortal,
   ModuleDetail, PrivacyPolicy, TermsOfService,
-  // School LMIS — code preserved, removed from live until ready
-  // SchoolPortal, SchoolsShowcase, SchoolLmisHub,
-  // SchoolAdminPortal, SchoolTeacherPortal, SchoolStudentPortal
+  InsightPost, FAQ, RefundPolicy, LmisTour, VerifyRecord, Pricing, Checkout,
 } from './pages';
 import AuthCallback from './pages/AuthCallback';
 import ResetPassword from './pages/ResetPassword';
@@ -24,18 +24,20 @@ function App() {
   return (
     <ErrorBoundary name="RootAppBoundary">
       <ThemeProvider>
-        <DataProvider>
-          <FeatureFlagsProvider>
-            <Router>
-              <AnalyticsProvider>
-                <Routes>
-                  {/* Public Website Routes (Wrapped in Layout with Header/Footer) */}
-                  <Route path="/" element={<Layout />}>
-                    <Route index element={<Home />} />
-                    <Route path="about" element={<About />} />
-                    <Route path="services" element={<Services />} />
-                    {/* <Route path="schools" element={<SchoolsShowcase />} /> */}{/* School LMIS — coming soon */}
-                    <Route path="training-academy" element={<TrainingAcademy />} />
+        <TenantProvider>
+          <DataProvider>
+            <FeatureFlagsProvider>
+              <Router>
+                <AnalyticsProvider>
+                  <Routes>
+                    {/* Public Website Routes (Wrapped in Layout with Header/Footer) */}
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<Home />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="services" element={<Services />} />
+                      <Route path="pricing" element={<Pricing />} />
+                      <Route path="checkout" element={<Checkout />} />
+                      <Route path="training-academy" element={<TrainingAcademy />} />
                     <Route path="training-academy/:slug" element={<ModuleDetail />} />
                     <Route path="modules/:slug" element={<ModuleDetail />} />
                     <Route path="programmes/:slug" element={<ModuleDetail />} />
@@ -43,11 +45,19 @@ function App() {
                     <Route path="ecosystem" element={<Ecosystem />} />
                     <Route path="resources" element={<Resources />} />
                     <Route path="insights" element={<Insights />} />
+                    <Route path="insights/:slug" element={<InsightPost />} />
+                    <Route path="faq" element={<FAQ />} />
                     <Route path="contact" element={<Contact />} />
                     <Route path="privacy" element={<PrivacyPolicy />} />
                     <Route path="privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="terms" element={<TermsOfService />} />
                     <Route path="terms-of-service" element={<TermsOfService />} />
+                    <Route path="refund-policy" element={<RefundPolicy />} />
+                    <Route path="refunds" element={<RefundPolicy />} />
+                    <Route path="verify" element={<VerifyRecord />} />
+                    <Route path="verify/:id" element={<VerifyRecord />} />
+                    {/* Fallback route to prevent any white blank screen on 404 */}
+                    <Route path="*" element={<Home />} />
                   </Route>
 
                   {/* Admin Dashboard (Standalone Layout) */}
@@ -56,6 +66,7 @@ function App() {
                   
                   {/* NexaTransform Hub LMIS Standalone Shell Routes (Skills Academy) */}
                   <Route path="/lmis" element={<LmisPortal />} />
+                  <Route path="/lmis/tour" element={<LmisTour />} />
                   <Route path="/lmis/learner" element={<ErrorBoundary name="LearnerPortalBoundary"><LearnerPortal /></ErrorBoundary>} />
                   <Route path="/lmis/lecturer" element={<ErrorBoundary name="LecturerPortalBoundary"><LecturerPortal /></ErrorBoundary>} />
                   <Route path="/lmis/lecturer/register" element={<LecturerRegistration />} />
@@ -85,6 +96,7 @@ function App() {
             </Router>
           </FeatureFlagsProvider>
         </DataProvider>
+        </TenantProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

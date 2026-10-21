@@ -616,6 +616,79 @@ export const Services = () => {
         </div>
       </section>
 
+      {/* ── 4B. QUANTIFIED OPERATIONAL TRANSFORMATION CASE STUDIES ── */}
+      <section className="py-16 px-4 bg-white border-t border-b border-gray-100">
+        <div className="container max-w-5xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-block px-3 py-0.5 rounded-full bg-emerald/10 text-emerald text-xs font-bold uppercase tracking-wider mb-2 border border-emerald/20">
+              Proven Measurable Impact
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-navy tracking-tight mb-2">
+              Quantified Transformation Results
+            </h2>
+            <p className="text-xs md:text-sm text-gray-500">
+              We measure our advisory and technology engineering by the hours recovered, latency eliminated, and bottom-line stability delivered.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Case 1 */}
+            <div className="p-6 rounded-2xl bg-glacial border border-gray-200/80 hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="text-2xl md:text-3xl font-black text-emerald mb-1">
+                  18 hrs / wk
+                </div>
+                <div className="text-xs font-bold text-navy uppercase tracking-wider mb-3">
+                  Supervisory Time Recaptured
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                  Manual shift reconciliations and fragmented WhatsApp handoffs created production blindspots. Using <strong>DMAIC root-cause analysis</strong>, we standardized handover procedures and deployed a digital supervisory telemetry board.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-gray-200 text-[11px] font-semibold text-gray-500">
+                Sector: Manufacturing &amp; Industrial Operations
+              </div>
+            </div>
+
+            {/* Case 2 */}
+            <div className="p-6 rounded-2xl bg-glacial border border-gray-200/80 hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="text-2xl md:text-3xl font-black text-teal-600 mb-1">
+                  65% Latency Cut
+                </div>
+                <div className="text-xs font-bold text-navy uppercase tracking-wider mb-3">
+                  Workflow Dispatch Velocity
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                  Multi-tier client requests suffered from duplicate entries and lost email approvals. We engineered a <strong>custom operational dispatch portal</strong> with automated role routing and instant digital sign-off telemetry.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-gray-200 text-[11px] font-semibold text-gray-500">
+                Sector: Commercial Logistics &amp; Enterprise Services
+              </div>
+            </div>
+
+            {/* Case 3 */}
+            <div className="p-6 rounded-2xl bg-glacial border border-gray-200/80 hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="text-2xl md:text-3xl font-black text-blue-600 mb-1">
+                  100% Digital PoE
+                </div>
+                <div className="text-xs font-bold text-navy uppercase tracking-wider mb-3">
+                  Audit-Ready Evidence Compliance
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed mb-4">
+                  Physical training binders and paper declarations delayed institutional verification by weeks. Deployed the <strong>NexaTransform Hub LMIS</strong> with cryptographic timestamps and instant public document verification.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-gray-200 text-[11px] font-semibold text-gray-500">
+                Sector: Corporate Workforce Enablement
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── 5. CTA ── */}
       <section className="py-14 px-4 bg-navy text-white text-center">
         <div className="container max-w-3xl mx-auto">

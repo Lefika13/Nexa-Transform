@@ -19,6 +19,7 @@ import { generateProofOfRegistrationPDF } from '../utils/registrationPdf';
 import { generateProofOfStipendPaymentPDF } from '../utils/stipendReceiptPdf';
 import { generatePoePDF } from '../utils/poePdf';
 import { generateAcademicTranscriptPDF } from '../utils/transcriptPdf';
+import { generateCompletionCertificatePDF } from '../utils/completionCertificatePdf';
 import { calculateModuleAcademicRecord, calculateProgrammeAcademicStanding, ACADEMIC_CONSTANTS } from '../utils/gradeCalculations';
 import { isDeliverableEmail, safeSupabasePasswordReset } from '../utils/emailValidator';
 import { LmisCalendarSchedule } from '../components/shared/LmisCalendarSchedule';
@@ -4260,20 +4261,87 @@ export const LearnerPortal = () => {
       {/* CERTIFICATES */}
       {activeTab === 'certificates' && (
         <div>
-          <div className="lmis-page-header"><h1 className="lmis-page-title">My Certificates</h1><p className="lmis-page-sub">Your earned qualifications and completions.</p></div>
-          {myCerts.length === 0
-            ? <div className="lmis-card"><div className="lmis-empty"><IcoAward size={40} style={{ color: '#CBD5E1' }} /><p className="lmis-empty-title">No certificates yet</p><p className="lmis-empty-sub">Certificates will be issued upon successful programme completion.</p></div></div>
-            : <div className="lmis-3col">
+          <div className="lmis-page-header">
+            <h1 className="lmis-page-title">My Certificates</h1>
+            <p className="lmis-page-sub">Your earned qualifications, practical competencies, and official completion certificates.</p>
+          </div>
+
+          {/* Self-Paying Executive Track Clearance & Download Card */}
+          <div className="lmis-card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(217, 119, 6, 0.35)', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(217, 119, 6, 0.08))' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <span className="badge badge-gold" style={{ marginBottom: '0.45rem' }}>Self-Paying Learner Track</span>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0.2rem 0', color: 'var(--text-main, #fff)' }}>
+                  Certificate of Completion (Self-Funded Enrolment)
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-sub, #94a3b8)', margin: 0, maxWidth: '640px', lineHeight: 1.5 }}>
+                  This official landscape certificate certifies full practical coursework fulfillment, continuous assessment clearance, and verified self-funded candidate status for <strong>{myProfile?.programme_enrolled || 'Enterprise Process Transformation'}</strong>.
+                </p>
+              </div>
+              <button
+                className="btn btn-gold"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, padding: '0.65rem 1.25rem' }}
+                onClick={() => {
+                  generateCompletionCertificatePDF({
+                    learnerName: myProfile?.learner_name || activeEmail,
+                    studentNumber: myProfile?.student_number || 'NX-2026-SP',
+                    idPassport: myProfile?.id_passport,
+                    programmeTitle: myProfile?.programme_enrolled || 'Business Process and Work Study Management',
+                    grade: '88% (Practical Distinction)',
+                    isSelfPaying: true
+                  });
+                  showToast('Certificate of Completion (Self-Paying) generated!');
+                }}
+              >
+                🎓 Download Certificate of Completion (PDF)
+              </button>
+            </div>
+          </div>
+
+          {myCerts.length === 0 ? (
+            <div className="lmis-card">
+              <div className="lmis-empty">
+                <IcoAward size={40} style={{ color: '#CBD5E1' }} />
+                <p className="lmis-empty-title">Archived Institutional Certificates</p>
+                <p className="lmis-empty-sub">Additional module certificates issued directly by your academic coordinator will appear here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="lmis-3col">
               {myCerts.map(c => (
-                <div key={c.id} className="lmis-cert-card">
-                  <span className="badge badge-gold" style={{ marginBottom: '0.875rem' }}>{c.status}</span>
-                  <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', marginBottom: '0.4rem' }}>{c.programme_title || c.course_code}</h3>
-                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.875rem' }}>Issued: {fmtDate(c.issue_date)}</p>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--gold)', fontFamily: 'monospace', fontWeight: 700 }}>{c.certificate_number || '—'}</p>
+                <div key={c.id} className="lmis-cert-card" style={{ display: 'flex', flexDirection: 'col', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <span className="badge badge-gold">{c.status}</span>
+                      <span style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 700 }}>SELF-PAYING</span>
+                    </div>
+                    <h3 style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', marginBottom: '0.4rem' }}>{c.programme_title || c.course_code}</h3>
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.5rem' }}>Issued: {fmtDate(c.issue_date)}</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--gold)', fontFamily: 'monospace', fontWeight: 700, marginBottom: '0.75rem' }}>{c.certificate_number || '—'}</p>
+                  </div>
+                  <button
+                    className="btn btn-sm btn-gold"
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', fontWeight: 700 }}
+                    onClick={() => {
+                      generateCompletionCertificatePDF({
+                        learnerName: c.learner_name || myProfile?.learner_name || activeEmail,
+                        studentNumber: c.student_number || myProfile?.student_number || 'NX-2026-SP',
+                        idPassport: myProfile?.id_passport,
+                        programmeTitle: c.programme_title || c.course_code || myProfile?.programme_enrolled,
+                        certificateNumber: c.certificate_number,
+                        issueDate: c.issue_date,
+                        grade: c.grade || '88% (Practical Distinction)',
+                        isSelfPaying: true
+                      });
+                      showToast('Certificate of Completion (Self-Paying) generated!');
+                    }}
+                  >
+                    📄 Download PDF
+                  </button>
                 </div>
               ))}
             </div>
-          }
+          )}
         </div>
       )}
 

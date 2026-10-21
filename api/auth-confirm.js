@@ -1,3 +1,5 @@
+import { checkRateLimit } from './_rateLimit.js';
+
 // Vercel Serverless Function: auth-confirm.js
 // Provisions a Supabase Auth account for a learner and auto-confirms their email.
 // Uses SUPABASE_SERVICE_ROLE_KEY — stored ONLY in Vercel env vars, NEVER in the browser.
@@ -49,6 +51,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+  // Enterprise Security: Rate limit provisioning attempts per client IP
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const rateStatus = checkRateLimit(clientIp, 25, 60 * 1000);
+  if (!rateStatus.allowed) {
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: 'Too many authentication provisioning attempts. Please wait 1 minute before trying again.'
+    });
+  }
 
   if (!SERVICE_ROLE_KEY) {
     return res.status(503).json({ error: 'service_role_not_configured', message: 'Auth provisioning not yet available. Contact admin.' });

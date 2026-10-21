@@ -28,6 +28,42 @@ export const LmisPortal = () => {
         <h1 className="lp-title">NEXA<span>TRANSFORM</span><br />HUB LMIS</h1>
         <p className="lp-subtitle">Select your institutional portal to continue</p>
 
+        {/* Public Transparency & Verification Action Badges */}
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', margin: '0.5rem auto 2rem auto', maxWidth: '780px' }}>
+          <Link to="/lmis/tour" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.45rem 1rem',
+            borderRadius: '999px',
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            color: '#38bdf8',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            textDecoration: 'none'
+          }}>
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Look Inside the LMIS: Interactive Product Tour →
+          </Link>
+          <Link to="/verify" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.45rem 1rem',
+            borderRadius: '999px',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            color: '#34d399',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            textDecoration: 'none'
+          }}>
+            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Verify Certificate / PoE Record →
+          </Link>
+        </div>
+
         {isSessionExpired && (
           <div style={{
             maxWidth: '960px',
@@ -104,6 +140,31 @@ export const LmisPortal = () => {
 
       {/* Footer */}
       <footer className="lp-footer">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1.25rem',
+          flexWrap: 'wrap',
+          marginBottom: '1rem',
+          fontSize: '0.78rem',
+          color: '#64748b'
+        }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            256-Bit TLS In-Transit Encryption
+          </span>
+          <span>•</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            30-Minute Inactivity Protection
+          </span>
+          <span>•</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            POPIA Statutory Data Governance
+          </span>
+        </div>
         <span className="lp-footer-copy">© {new Date().getFullYear()} NexaTransform Hub</span>
         <div className="lp-footer-values">
           {['Integrity','Innovation','Excellence','Collaboration','Impact'].map(v => (
