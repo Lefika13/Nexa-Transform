@@ -6,70 +6,54 @@ const PLANS = [
   {
     id: 'starter',
     name: 'Starter Academy',
-    badge: 'Emerging Providers',
     priceZar: 'From R 25,000',
     cycle: 'billed annually or monthly',
-    description: 'Perfect for accredited boutique academies and independent SDPs scaling their initial cohorts.',
+    description: 'Empowers emerging academies and boutique SDPs to digitize compliance, eliminate manual paperwork, and scale cohort operations.',
     learnersQuota: 'Less than 1,000 Active Learners',
-    features: [
-      'Less than 1,000 Active Learners',
-      'Up to 10 Facilitator / Lecturer Accounts',
-      '3 Administrative & Finance Seats',
-      '50 GB High-Resolution PoE Cloud Storage',
-      'SA Bank Batch EFT Exporter (Standard Bank, Nedbank, FNB, ABSA)',
-      'Maker-Checker Dual Authorization on Stipends',
-      'Institutional Branding (Logo & Brand Colors)',
-      'SETA / QCTO Compliance & Audit Exporters',
-      'Priority WhatsApp & Email Support (4h SLA)'
+    benefits: [
+      'SETA & QCTO audit-ready Portfolio of Evidence (PoE) tracking',
+      'Eliminate stipend fraud with dual Maker-Checker authorization',
+      'Automated SA bank batch EFT exporter (Standard Bank, Nedbank, FNB, ABSA)',
+      'Custom institutional branding with your academy logo and color identity',
+      'Multi-facilitator marking workflows and statutory progress reporting',
+      'Dedicated compliance onboarding and rapid rollout assistance'
     ],
-    popular: false,
     ctaText: 'Get Started with Starter',
     actionCode: 'starter'
   },
   {
     id: 'growth',
     name: 'Growth Provider',
-    badge: 'Most Popular',
     priceZar: 'From R 45,000',
     cycle: 'billed annually or monthly',
-    description: 'Built for high-volume accredited colleges running national learnership programs with complete corporate white-labeling.',
+    description: 'Designed for accredited institutions scaling high-volume learnerships with full corporate white-labeling and direct payout rails.',
     learnersQuota: '1,000+ to 1,500 Active Learners',
-    features: [
-      '1,000+ to 1,500 Active Learners Included',
-      'Unlimited Facilitator & Lecturer Seats',
-      'Unlimited Administrative & Finance Seats',
-      '500 GB PoE & Submission Storage',
-      'Full White-Label Portal & Custom Domain (e.g. academy.yourfirm.co.za)',
-      'Automated Direct Payout API Integration (Ozow / Stitch)',
-      'Biometric & Geo-location Attendance Sync',
-      'Maker-Checker Dual Approval + Fraud Audits',
-      'SETA PoE Instant ZIP Archive Exporter',
-      'Dedicated Account Manager (1h SLA Response)'
+    benefits: [
+      'Full institutional white-labeling hosted on your own custom web domain',
+      'Direct instant stipend disbursements via integrated Ozow Instant EFT API',
+      'Biometric and geo-location attendance sync ensuring verifiable grant compliance',
+      'Instant one-click batch ZIP archiving for rapid SETA verification visits',
+      'Uncapped lecturer, assessor, moderator, and financial management seats',
+      'Priority 1-hour SLA account manager and SLA uptime assurance'
     ],
-    popular: true,
     ctaText: 'Deploy Growth Platform',
     actionCode: 'growth'
   },
   {
     id: 'pro_plus',
     name: 'Pro+ Plan',
-    badge: 'Enterprise & TVET',
     priceZar: 'From R 60,000',
     cycle: 'custom institutional agreement',
-    description: 'Comprehensive enterprise deployment for TVET colleges, universities, and multi-campus corporate learnership consortia.',
+    description: 'Enterprise architecture for TVET colleges, universities, and multi-campus learnership consortia requiring tailored integrations.',
     learnersQuota: '1,500+ Active Learners',
-    features: [
-      '1,500+ Active Learners (Custom Scaling)',
-      'Multi-Campus & Multi-Entity Departmental Control',
-      'Multi-Bank Corporate Payout Rails & Open Banking',
-      'Dedicated Cloud Database Replica / 1 TB+ Storage',
-      'Custom ERP & HRIS Ledger Sync (SAP, Sage 300, PeopleSoft)',
-      'Bespoke SETA Regulatory BI & Telemetry',
-      'Full Native Mobile App White-Label Option',
-      'Contractual 99.9% Uptime SLA',
-      '24/7 Dedicated Ops Hotline & Executive Onboarding'
+    benefits: [
+      'Multi-campus, multi-entity centralized academic governance and scaling',
+      'Seamless automated ERP & HRIS ledger synchronization (SAP, Sage 300, PeopleSoft)',
+      'Dedicated cloud database replica with contractual 99.9% uptime SLA',
+      'Custom corporate payout rails and bespoke SETA regulatory telemetry',
+      'Native white-label mobile app deployment for staff and learners',
+      '24/7 prioritized operational hotline and executive onboarding team'
     ],
-    popular: false,
     ctaText: 'Speak to Enterprise Sales',
     actionCode: 'pro_plus'
   }
@@ -119,19 +103,13 @@ export const Pricing = () => {
           </div>
         </div>
 
-        {/* Blocked Boxes Grid - Side-by-Side next to one another */}
+        {/* Blocked Boxes Grid - Side-by-Side peer boxes */}
         <div className="pricing-boxes-grid">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
-              className={`pricing-box-card ${plan.popular ? 'featured-box' : ''}`}
+              className="pricing-box-card"
             >
-              {plan.popular && (
-                <div className="featured-ribbon-tag">
-                  {plan.badge}
-                </div>
-              )}
-
               <div>
                 <div className="box-header-area">
                   <div className="plan-title-row">
@@ -151,13 +129,13 @@ export const Pricing = () => {
                   </p>
                 </div>
 
-                {/* Features Checklist */}
-                <div className="features-list-heading">Included Capabilities:</div>
+                {/* Key Benefits Checklist */}
+                <div className="features-list-heading">Key Institutional Benefits:</div>
                 <ul className="box-features-list">
-                  {plan.features.map((feature, idx) => (
+                  {plan.benefits.map((benefit, idx) => (
                     <li key={idx} className="feature-check-item">
                       <Check className="feature-check-icon" />
-                      <span>{feature}</span>
+                      <span>{benefit}</span>
                     </li>
                   ))}
                 </ul>
@@ -166,7 +144,7 @@ export const Pricing = () => {
               {/* Action Button */}
               <a
                 href={`/checkout?plan=${plan.id}`}
-                className={`plan-action-btn ${plan.popular ? 'primary-btn' : 'secondary-btn'}`}
+                className="plan-action-btn primary-btn"
               >
                 <span>{plan.ctaText}</span>
                 <ArrowRight style={{ width: 16, height: 16 }} />
