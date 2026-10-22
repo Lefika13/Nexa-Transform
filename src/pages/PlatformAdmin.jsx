@@ -9,27 +9,8 @@ import { PLAN_DEFINITIONS } from '../context/TenantContext';
 import { getPortalSession, setPortalSession } from '../utils/sessionManager';
 import './PlatformAdmin.css';
 
-// Baseline accredited institutions registry
-const INITIAL_TENANTS = [
-  {
-    id: 'a0000000-0000-0000-0000-000000000001',
-    name: 'Nexa Transform Academy',
-    slug: 'nexa',
-    custom_domain: 'academy.nexa-transform.com',
-    plan_code: 'growth',
-    plan_name: 'Growth Provider',
-    monthly_price_zar: 45000,
-    active_learners: 0,
-    max_learners: 1500,
-    status: 'active',
-    is_suspended: false,
-    suspension_reason: null,
-    billing_email: 'lefika6613@gmail.com',
-    billing_cycle: 'annual',
-    created_at: '2026-06-15T09:00:00Z',
-    next_billing: '2027-06-15T00:00:00Z'
-  }
-];
+// Baseline commercial subscribers registry (purely external tenants, excluding internal Nexa LMIS)
+const INITIAL_TENANTS = [];
 
 const MASTER_ROOT_EMAIL = 'lefika6613@gmail.com';
 
@@ -41,9 +22,16 @@ export const PlatformAdmin = () => {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
-            // Strip out legacy mock tenants
-            const filtered = parsed.filter(t => !['org-002', 'org-003', 'org-004'].includes(t.id) && !t.billing_email?.includes('apexskills') && !t.billing_email?.includes('vanguardtvet') && !t.billing_email?.includes('ubuntuhealth'));
-            if (filtered.length > 0) return filtered;
+            // Strip out legacy mock tenants and internal Nexa engine
+            const filtered = parsed.filter(t =>
+              t.slug !== 'nexa' &&
+              t.id !== 'a0000000-0000-0000-0000-000000000001' &&
+              !['org-002', 'org-003', 'org-004'].includes(t.id) &&
+              !t.billing_email?.includes('apexskills') &&
+              !t.billing_email?.includes('vanguardtvet') &&
+              !t.billing_email?.includes('ubuntuhealth')
+            );
+            return filtered;
           }
         }
       }
@@ -53,7 +41,7 @@ export const PlatformAdmin = () => {
     return INITIAL_TENANTS;
   });
 
-  // Master Root Access Gate: only lefika6613@gmail.com
+  // Master Root Access Gate: only authorized administrator
   const checkIsAuthorized = () => {
     try {
       if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
@@ -90,7 +78,7 @@ export const PlatformAdmin = () => {
     const normEmail = loginEmail.toLowerCase().trim();
     if (normEmail !== MASTER_ROOT_EMAIL) {
       setAuthenticating(false);
-      setAuthError('Access Denied: Only the authorized root administrator (lefika6613@gmail.com) is permitted.');
+      setAuthError('Access Denied: Invalid administrative credentials or insufficient permissions.');
       return;
     }
 
@@ -102,7 +90,7 @@ export const PlatformAdmin = () => {
 
       if (!error && authData?.user) {
         setPortalSession('admin', {
-          name: 'Mr. Lefika Molefe',
+          name: 'Administrator',
           email: MASTER_ROOT_EMAIL,
           role: 'Super Admin'
         });
@@ -114,7 +102,7 @@ export const PlatformAdmin = () => {
       // Master password fallback
       if (loginPass === 'NexaAdmin#2026' || loginPass === 'Admin#2026') {
         setPortalSession('admin', {
-          name: 'Mr. Lefika Molefe',
+          name: 'Administrator',
           email: MASTER_ROOT_EMAIL,
           role: 'Super Admin'
         });
@@ -123,7 +111,7 @@ export const PlatformAdmin = () => {
         return;
       }
 
-      setAuthError(error?.message || 'Invalid credentials for root administrator.');
+      setAuthError('Access Denied: Invalid administrative credentials or insufficient permissions.');
     } catch (err) {
       setAuthError(err.message || 'Authentication error.');
     } finally {
@@ -177,12 +165,15 @@ export const PlatformAdmin = () => {
           )
         `);
 
-      if (!error && Array.isArray(orgs) && orgs.length > 0) {
+      if (!error && Array.isArray(orgs)) {
+        // Exclude internal nexa system! Only external commercial subscribers belong in this SaaS tower directory.
+        const commercialOrgs = orgs.filter(org => org.slug !== 'nexa' && org.id !== 'a0000000-0000-0000-0000-000000000001');
+
         const { count: studentCount } = await supabase
           .from('student_profiles')
           .select('*', { count: 'exact', head: true });
 
-        const mapped = orgs.map(org => {
+        const mapped = commercialOrgs.map(org => {
           const planCode = org.subscription_plans?.code || 'growth';
           const planDef = PLAN_DEFINITIONS[planCode] || PLAN_DEFINITIONS.growth;
           return {
@@ -345,7 +336,7 @@ export const PlatformAdmin = () => {
             </div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F8FAFC', margin: '0 0 0.5rem 0' }}>SaaS Control Tower</h2>
             <p style={{ fontSize: '0.85rem', color: '#94A3B8', margin: 0 }}>
-              Master platform administration is restricted strictly to root authorized email: <code style={{ color: '#38BDF8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>lefika6613@gmail.com</code>.
+              Master multi-tenant platform administration and governance portal. Authenticate with authorized credentials to proceed.
             </p>
           </div>
 
@@ -357,12 +348,12 @@ export const PlatformAdmin = () => {
 
           <form onSubmit={handleMasterAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Root Administrator Email</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Administrator Email</label>
               <input
                 type="email"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="lefika6613@gmail.com"
+                placeholder="admin@domain.com"
                 required
                 style={{ width: '100%', padding: '0.75rem 1rem', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC', fontSize: '0.9rem', outline: 'none' }}
               />
@@ -569,7 +560,20 @@ export const PlatformAdmin = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTenants.map(t => {
+                {filteredTenants.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: '#94A3B8' }}>
+                      <Building2 style={{ width: 40, height: 40, color: '#475569', margin: '0 auto 0.75rem auto', display: 'block' }} />
+                      <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#F8FAFC', marginBottom: '0.35rem' }}>
+                        No External Commercial Subscribers Yet
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#64748B', maxWidth: '520px', margin: '0 auto', lineHeight: '1.5' }}>
+                        External accredited training academies that subscribe via the commercial SaaS plans (Starter, Growth, Pro+) will automatically be provisioned and appear in this governance directory.
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTenants.map(t => {
                   const quotaPercent = Math.min(100, Math.round((t.active_learners / t.max_learners) * 100));
                   return (
                     <tr key={t.id}>
@@ -697,7 +701,7 @@ export const PlatformAdmin = () => {
                       </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>
