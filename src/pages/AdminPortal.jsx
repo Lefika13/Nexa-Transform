@@ -49,6 +49,8 @@ export function normalizeAdminRole(role) {
   const r = String(role).trim();
   const l = r.toLowerCase();
   if (l.includes('super')) return 'Super Admin';
+  if (l.includes('senior')) return 'Senior Admin';
+  if (l.includes('junior')) return 'Junior Admin';
   if (l.includes('finance') || l.includes('stipend') || l.includes('accountant') || l.includes('treasur') || l.includes('bursar')) {
     return 'Finance Officer';
   }
@@ -67,8 +69,18 @@ export function normalizeAdminRole(role) {
   return r;
 }
 
+export const getRoleLimitForTenant = (role, currentTenant) => {
+  const planCode = currentTenant?.plan_code || 'starter';
+  if (planCode !== 'starter') return 99999;
+  const norm = normalizeAdminRole(role);
+  if (norm === 'Lecturer') return currentTenant?.plan?.max_facilitators || 10;
+  return currentTenant?.plan?.max_seats_per_role || 5;
+};
+
 const ADMIN_ROLES = [
   'Super Admin',
+  'Senior Admin',
+  'Junior Admin',
   'Admin',
   'Academic Registrar',
   'Registrar Admin',
@@ -165,6 +177,8 @@ function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomT
                 title="Super Admin Role Preview Switcher: Instantly test different portal role interfaces"
               >
                 <option value="Super Admin">Super Admin (All Access)</option>
+                <option value="Senior Admin">Senior Admin (Full Control)</option>
+                <option value="Junior Admin">Junior Admin (Admissions & Operations)</option>
                 <option value="Finance Officer">Finance Officer (Stipends &amp; Banking)</option>
                 <option value="Academic Registrar">Academic Registrar (Learners &amp; Modules)</option>
                 <option value="Quality Assurance Officer">QA Officer (Compliance &amp; PoE)</option>
@@ -991,15 +1005,16 @@ export const AdminPortal = () => {
     e.preventDefault();
     if (!adminForm.email.trim() || !adminForm.name.trim()) return;
 
-    const maxAdmins = tenant?.plan?.max_admin_seats || (tenant?.plan_code === 'starter' ? 3 : 99999);
-    if ((system_admins || []).length >= maxAdmins) {
-      alert(`Administrator Seats Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) allows up to ${maxAdmins} administrator accounts. Please upgrade to Growth Provider for unlimited administrators.`);
+    const targetRole = normalizeAdminRole(adminForm.role);
+    const maxPerRole = getRoleLimitForTenant(targetRole, tenant);
+    const currentInRole = (system_admins || []).filter(a => normalizeAdminRole(a.role) === targetRole).length;
+    if (currentInRole >= maxPerRole) {
+      alert(`Role Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) limits each administrative role to ${maxPerRole} individuals (5 Junior Admins, 5 Senior Admins, 5 QA, 5 Finance, etc.). You currently have ${currentInRole} in "${targetRole}". Please upgrade to Growth Provider for unlimited seats.`);
       return;
     }
 
     const cleanEmail = adminForm.email.trim().toLowerCase();
     const fullName = adminForm.name.trim();
-    const targetRole = normalizeAdminRole(adminForm.role);
     const initialPassword = 'NX-ADM#' + Math.floor(1000 + Math.random() * 9000);
 
     await createRecord('system_admins', {
@@ -2166,12 +2181,21 @@ export const AdminPortal = () => {
       return;
     }
 
+    const targetRole = normalizeAdminRole(adminStaffForm.role);
+    const maxPerRole = getRoleLimitForTenant(targetRole, tenant);
+    const currentInRole = (system_admins || []).filter(a => normalizeAdminRole(a.role) === targetRole).length;
+    if (currentInRole >= maxPerRole) {
+      setToast(`Role quota reached: ${tenant?.plan?.name || 'Starter Academy'} limits "${targetRole}" to ${maxPerRole} individuals.`);
+      alert(`Role Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) limits each administrative role to ${maxPerRole} individuals (5 Junior Admins, 5 Senior Admins, 5 QA, 5 Finance, etc.). You currently have ${currentInRole} in "${targetRole}". Please upgrade to Growth Provider for unlimited seats.`);
+      return;
+    }
+
     const newStaff = {
       id: 'ADM-' + Date.now(),
       name: adminStaffForm.name.trim(),
       email: adminStaffForm.email.trim().toLowerCase(),
       phone: adminStaffForm.phone || '+27 82 000 0000',
-      role: normalizeAdminRole(adminStaffForm.role),
+      role: targetRole,
       password: adminStaffForm.password,
       temp_password: adminStaffForm.password,
       status: 'Active',
@@ -2221,37 +2245,39 @@ export const AdminPortal = () => {
 
   /* ── Role-Based Access Control (RBAC) & Tabs ── */
   const loggedInRole = normalizeAdminRole(currentAdmin?.role || 'Super Admin');
-  const isActualSuperAdmin = loggedInRole === 'Super Admin' || AUTHORIZED_ADMIN_EMAILS.includes((currentAdmin?.email || loginEmail || '').toLowerCase().trim());
+  const isActualSuperAdmin = loggedInRole === 'Super Admin' || loggedInRole === 'Senior Admin' || AUTHORIZED_ADMIN_EMAILS.includes((currentAdmin?.email || loginEmail || '').toLowerCase().trim());
   const currentRole = normalizeAdminRole(rolePreview || loggedInRole);
-  const isSuperAdmin = currentRole === 'Super Admin';
+  const isSeniorOrSuperAdmin = currentRole === 'Super Admin' || currentRole === 'Senior Admin';
+  const isSuperAdmin = isSeniorOrSuperAdmin;
+  const isJuniorAdmin = currentRole === 'Junior Admin';
   const isAcademicRegistrar = currentRole === 'Academic Registrar';
   const isFinanceOfficer = currentRole === 'Finance Officer';
   const isQaOfficer = currentRole === 'Quality Assurance Officer' || currentRole === 'QA Officer';
 
   // Strict RBAC Rules:
-  const canDelete = isSuperAdmin; // STRICT: ONLY Super Admin has deletion privileges!
-  const canManageLearners = isSuperAdmin || isAcademicRegistrar;
-  const canManageLecturers = isSuperAdmin || isAcademicRegistrar;
-  const canManageStaff = isSuperAdmin;
-  const canCaptureGrades = isSuperAdmin || isAcademicRegistrar || isQaOfficer;
-  const canDisburseStipends = isSuperAdmin || isFinanceOfficer;
-  const canConfigureBanking = isSuperAdmin || isFinanceOfficer;
+  const canDelete = isSeniorOrSuperAdmin; // STRICT: ONLY Super & Senior Admins have deletion privileges!
+  const canManageLearners = isSeniorOrSuperAdmin || isAcademicRegistrar || isJuniorAdmin;
+  const canManageLecturers = isSeniorOrSuperAdmin || isAcademicRegistrar;
+  const canManageStaff = isSeniorOrSuperAdmin;
+  const canCaptureGrades = isSeniorOrSuperAdmin || isAcademicRegistrar || isQaOfficer || isJuniorAdmin;
+  const canDisburseStipends = isSeniorOrSuperAdmin || isFinanceOfficer;
+  const canConfigureBanking = isSeniorOrSuperAdmin || isFinanceOfficer;
 
   const ALL_TABS = [
-    { id: 'overview',     label: 'Overview',                 icon: <IcoCheck size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
-    { id: 'lecturers',    label: 'Lecturers / Facilitators', icon: <IcoUser size={16} />,  roles: ['Super Admin', 'Academic Registrar'] },
-    { id: 'users',        label: 'Learners & Students',      icon: <IcoUser size={16} />,  roles: ['Super Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
-    { id: 'stipends',     label: 'Stipends & Disbursements', icon: <IcoWallet size={16} />, roles: ['Super Admin', 'Finance Officer'] },
-    { id: 'grades',       label: 'Marks & Gradebook',        icon: <IcoAward size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Quality Assurance Officer'] },
-    { id: 'demographics', label: 'Demographics',  icon: <IcoChart size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
-    { id: 'programmes',   label: 'Programmes',    icon: <IcoBook size={16} />,  roles: ['Super Admin', 'Academic Registrar'] },
-    { id: 'calendar',     label: 'Calendar & Timetable', icon: <IcoCalendar size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
-    { id: 'finance',      label: 'Tuition Fees & Invoices', icon: <IcoWallet size={16} />, roles: ['Super Admin', 'Finance Officer'] },
-    { id: 'compliance',   label: 'Compliance',    icon: <IcoShield size={16} />, roles: ['Super Admin', 'Quality Assurance Officer'] },
-    { id: 'certificates', label: 'Certificates',  icon: <IcoAward size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Quality Assurance Officer'] },
-    { id: 'audits',       label: 'Audit Trail',   icon: <IcoShield size={16} />, roles: ['Super Admin', 'Quality Assurance Officer', 'Academic Registrar', 'Finance Officer'] },
-    { id: 'branding',     label: 'Corporate Branding', icon: <IcoSparkles size={16} />, roles: ['Super Admin'] },
-    { id: 'staff',        label: 'Admin Staff',   icon: <IcoUser size={16} />,  roles: ['Super Admin'] },
+    { id: 'overview',     label: 'Overview',                 icon: <IcoCheck size={16} />, roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
+    { id: 'lecturers',    label: 'Lecturers / Facilitators', icon: <IcoUser size={16} />,  roles: ['Super Admin', 'Senior Admin', 'Academic Registrar'] },
+    { id: 'users',        label: 'Learners & Students',      icon: <IcoUser size={16} />,  roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
+    { id: 'stipends',     label: 'Stipends & Disbursements', icon: <IcoWallet size={16} />, roles: ['Super Admin', 'Senior Admin', 'Finance Officer'] },
+    { id: 'grades',       label: 'Marks & Gradebook',        icon: <IcoAward size={16} />, roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Quality Assurance Officer'] },
+    { id: 'demographics', label: 'Demographics',  icon: <IcoChart size={16} />, roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
+    { id: 'programmes',   label: 'Programmes',    icon: <IcoBook size={16} />,  roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar'] },
+    { id: 'calendar',     label: 'Calendar & Timetable', icon: <IcoCalendar size={16} />, roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Finance Officer', 'Quality Assurance Officer'] },
+    { id: 'finance',      label: 'Tuition Fees & Invoices', icon: <IcoWallet size={16} />, roles: ['Super Admin', 'Senior Admin', 'Finance Officer'] },
+    { id: 'compliance',   label: 'Compliance',    icon: <IcoShield size={16} />, roles: ['Super Admin', 'Senior Admin', 'Quality Assurance Officer'] },
+    { id: 'certificates', label: 'Certificates',  icon: <IcoAward size={16} />, roles: ['Super Admin', 'Senior Admin', 'Junior Admin', 'Academic Registrar', 'Quality Assurance Officer'] },
+    { id: 'audits',       label: 'Audit Trail',   icon: <IcoShield size={16} />, roles: ['Super Admin', 'Senior Admin', 'Quality Assurance Officer', 'Academic Registrar', 'Finance Officer'] },
+    { id: 'branding',     label: 'Corporate Branding', icon: <IcoSparkles size={16} />, roles: ['Super Admin', 'Senior Admin'] },
+    { id: 'staff',        label: 'Admin Staff',   icon: <IcoUser size={16} />,  roles: ['Super Admin', 'Senior Admin'] },
   ];
   const tabs = ALL_TABS.filter(t => t.roles.some(r => normalizeAdminRole(r) === currentRole));
   const bottomTabs = [
@@ -6210,6 +6236,57 @@ export const AdminPortal = () => {
             </button>
           </div>
 
+          {/* Role Quotas & Governance Status Bar */}
+          <div className="lmis-card mb-4" style={{ background: (tenant?.plan_code || 'starter') === 'starter' ? 'rgba(30, 58, 138, 0.04)' : 'rgba(13, 148, 136, 0.04)', borderColor: (tenant?.plan_code || 'starter') === 'starter' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(13, 148, 136, 0.3)' }}>
+            <div className="lmis-card-header flex-between" style={{ padding: '0.85rem 1.25rem', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <IcoShield size={16} color="var(--primary-navy)" />
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                  Institutional Role Quotas &amp; Governance Matrix
+                </span>
+              </div>
+              <span className={`badge ${(tenant?.plan_code || 'starter') === 'starter' ? 'badge-amber' : 'badge-emerald'}`}>
+                {(tenant?.plan_code || 'starter') === 'starter' ? 'Starter Plan Quotas Enforced (5 Per Role)' : 'Unlimited Staff Quota (Growth/Pro+)'}
+              </span>
+            </div>
+            <div className="lmis-card-body" style={{ padding: '1rem 1.25rem' }}>
+              {(tenant?.plan_code || 'starter') === 'starter' ? (
+                <div>
+                  <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.82rem', color: 'var(--text-main)' }}>
+                    <strong>Starter Plan Policy:</strong> Each administrative role is strictly capped at <strong>5 individuals each</strong> (5 Junior Admins, 5 Senior Admins, 5 QA, 5 Finance, 5 Registrars). Academic facilitators are limited to <strong>10 seats</strong>.
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
+                    {[
+                      { role: 'Senior Admin', count: (system_admins || []).filter(a => normalizeAdminRole(a.role) === 'Senior Admin' || normalizeAdminRole(a.role) === 'Super Admin').length, max: 5 },
+                      { role: 'Junior Admin', count: (system_admins || []).filter(a => normalizeAdminRole(a.role) === 'Junior Admin').length, max: 5 },
+                      { role: 'QA Officer', count: (system_admins || []).filter(a => normalizeAdminRole(a.role) === 'Quality Assurance Officer').length, max: 5 },
+                      { role: 'Finance Officer', count: (system_admins || []).filter(a => normalizeAdminRole(a.role) === 'Finance Officer').length, max: 5 },
+                      { role: 'Academic Registrar', count: (system_admins || []).filter(a => normalizeAdminRole(a.role) === 'Academic Registrar').length, max: 5 },
+                      { role: 'Facilitators', count: (system_lecturers || []).length, max: 10, isFacilitator: true }
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem 0.75rem' }}>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 700, textTransform: 'uppercase' }}>{m.role}</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '0.15rem', color: m.count >= m.max ? '#EF4444' : 'var(--text-main)' }}>
+                          {m.count} <span style={{ fontSize: '0.78rem', color: 'var(--text-sub)', fontWeight: 500 }}>/ {m.max} max</span>
+                        </div>
+                        <div style={{ height: '4px', background: 'rgba(0,0,0,0.06)', borderRadius: '2px', marginTop: '0.4rem', overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.min(100, (m.count / m.max) * 100)}%`, background: m.count >= m.max ? '#EF4444' : 'var(--primary-navy)', height: '100%' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-main)' }}>
+                    🟢 <strong>Unlimited Staff Seats:</strong> Your institution is running on the <strong>{tenant?.plan?.name || 'Growth Provider'}</strong>. You have unlimited seats for Junior Admins, Senior Admins, QA Officers, Finance Officers, Registrars, and Facilitators.
+                  </p>
+                  <span className="badge badge-teal">Uncapped Multi-Role Access</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {showAdminStaffForm && (
             <div className="lmis-card mb-4">
               <div className="lmis-card-header flex-between">
@@ -6234,10 +6311,12 @@ export const AdminPortal = () => {
                     <div className="lmis-field">
                       <label className="lmis-label">Assigned Administrative Role</label>
                       <select className="lmis-select" value={adminStaffForm.role} onChange={e => setAdminStaffForm({ ...adminStaffForm, role: e.target.value })}>
-                        <option>Super Admin</option>
-                        <option>Academic Registrar</option>
-                        <option>Finance Officer</option>
-                        <option>Quality Assurance Officer</option>
+                        <option value="Senior Admin">Senior Admin</option>
+                        <option value="Junior Admin">Junior Admin</option>
+                        <option value="Super Admin">Super Admin</option>
+                        <option value="Quality Assurance Officer">Quality Assurance Officer (QA)</option>
+                        <option value="Finance Officer">Finance Officer</option>
+                        <option value="Academic Registrar">Academic Registrar</option>
                       </select>
                     </div>
                     <div className="lmis-field" style={{ gridColumn: '1/-1' }}>
@@ -6281,17 +6360,23 @@ export const AdminPortal = () => {
                   ) : (
                     (system_admins || []).map((staff, idx) => {
                       const getScope = (r) => {
-                        switch (r) {
-                          case 'Super Admin': return 'Full Platform & System Control';
+                        const norm = normalizeAdminRole(r);
+                        switch (norm) {
+                          case 'Super Admin':
+                          case 'Senior Admin': return 'Full Platform & System Control';
+                          case 'Junior Admin': return 'Learners, Grades, Programmes, Timetables';
                           case 'Academic Registrar': return 'Learners, Enrolments, Courses, Certificates';
-                          case 'Finance Officer': return 'Fee Accounts, Invoicing, Billing Reports';
+                          case 'Finance Officer': return 'Fee Accounts, Invoicing, Billing & Stipends';
                           case 'Quality Assurance Officer': return 'PoE Audits, Compliance Records, Audit Trail';
-                          default: return 'Standard Admin';
+                          default: return 'Standard Admin Operations';
                         }
                       };
                       const getRoleBadge = (r) => {
-                        switch (r) {
-                          case 'Super Admin': return 'badge-gold';
+                        const norm = normalizeAdminRole(r);
+                        switch (norm) {
+                          case 'Super Admin':
+                          case 'Senior Admin': return 'badge-gold';
+                          case 'Junior Admin': return 'badge-sky';
                           case 'Academic Registrar': return 'badge-teal';
                           case 'Finance Officer': return 'badge-emerald';
                           case 'Quality Assurance Officer': return 'badge-navy';

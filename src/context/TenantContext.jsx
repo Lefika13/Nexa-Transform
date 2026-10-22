@@ -13,7 +13,8 @@ export const PLAN_DEFINITIONS = {
     annual_price_zar: 255000,
     max_active_learners: 1000,
     max_facilitators: 10,
-    max_admin_seats: 3,
+    max_seats_per_role: 5,        // 5 each: Junior Admin, Senior Admin, QA, Finance, Registrar
+    max_admin_seats: 5,           // Per administrative role
     allow_custom_domain: false,
     allow_stipend_payout_api: false, // NO direct stipend payouts from LMIS
     allow_stipend_batch_eft: true,   // Bank Batch EFT Exporter enabled
@@ -30,6 +31,7 @@ export const PLAN_DEFINITIONS = {
     max_active_learners: 1500,
     max_facilitators: 99999, // Unlimited
     max_admin_seats: 99999,   // Unlimited
+    max_seats_per_role: 99999, // Unlimited
     allow_custom_domain: true,
     allow_stipend_payout_api: true, // Direct Instant EFT Payouts via LMIS
     allow_stipend_batch_eft: true,
@@ -46,6 +48,7 @@ export const PLAN_DEFINITIONS = {
     max_active_learners: 999999, // 1,500+ (Unlimited)
     max_facilitators: 999999,    // Unlimited
     max_admin_seats: 999999,     // Unlimited
+    max_seats_per_role: 999999,  // Unlimited
     allow_custom_domain: true,
     allow_stipend_payout_api: true,
     allow_stipend_batch_eft: true,

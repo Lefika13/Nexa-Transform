@@ -12,7 +12,7 @@ const PLANS = [
     benefits: [
       { text: 'Digital Cohort & Curriculum Management' },
       { text: 'Automated SETA & QCTO Audit-Ready PoE Generation' },
-      { text: 'Multi-Facilitator Marking & Assessment Rubrics' },
+      { text: 'Max 10 Facilitators & 5 seats per role (5 Junior Admins, 5 Senior Admins, 5 QA, 5 Finance)' },
       { text: 'Institutional Logo & Academy Color Theming' },
       { text: 'Academic Transcripts & Registration PDFs' },
       { text: 'No learner stipend payouts from LMIS (requires Growth)', isNegative: true }
@@ -31,7 +31,7 @@ const PLANS = [
       { text: 'Custom Domain & Full White-Label Branding' },
       { text: 'Digital Attendance Tracking & Cohort Registers' },
       { text: '1-Click Batch SETA PoE Evidence ZIP Archive Exporter' },
-      { text: 'Unlimited Facilitators, Assessors & Moderators' },
+      { text: 'Unlimited Facilitators, Assessors & All Administrative Roles' },
       { text: 'Priority 1-Hour SLA & Dedicated Account Manager' }
     ],
     ctaText: 'Get Started'
