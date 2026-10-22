@@ -37,6 +37,7 @@ const IcoEdit  = (p) => <Icon d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 00
 const IcoTrash = (p) => <Icon d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" {...p}/>;
 const IcoEye   = (p) => <Icon d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z" {...p}/>;
 const IcoSearch= (p) => <Icon d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" {...p}/>;
+const IcoSparkles = (p) => <Icon d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" {...p}/>;
 
 /* ── Helpers ────────────────────────────────── */
 const fmtDate = (d) => { try { return d ? new Date(d).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; } catch { return d; } };
@@ -535,8 +536,117 @@ export const AdminPortal = () => {
   const [adminMarkCustomTitle, setAdminMarkCustomTitle] = useState('');
   const [adminMarkAssessmentType, setAdminMarkAssessmentType] = useState('ASSIGNMENT');
   const [adminLearnerMarks, setAdminLearnerMarks] = useState({});
-  const [adminSavingMarks, setAdminSavingMarks] = useState(false);
+  /* ── Institutional White-Label Branding State ─── */
+  const { tenant, updateBranding, resetBranding } = useTenant();
+  const [brandingForm, setBrandingForm] = useState({
+    name: tenant?.name || 'Nexa Transform Academy',
+    institution_tagline: tenant?.institution_tagline || 'Future-Proof Your Skills',
+    logo_url: tenant?.logo_url || '/images/logo.png',
+    primary_color: tenant?.primary_color || '#1E3A8A',
+    secondary_color: tenant?.secondary_color || '#0D9488',
+    accent_color: tenant?.accent_color || '#F59E0B',
+    custom_domain: tenant?.custom_domain || ''
+  });
+  const [brandingSaving, setBrandingSaving] = useState(false);
 
+  useEffect(() => {
+    if (tenant) {
+      setBrandingForm(prev => ({
+        ...prev,
+        name: tenant.name || prev.name,
+        institution_tagline: tenant.institution_tagline !== undefined ? tenant.institution_tagline : prev.institution_tagline,
+        logo_url: tenant.logo_url || prev.logo_url,
+        primary_color: tenant.primary_color || prev.primary_color,
+        secondary_color: tenant.secondary_color || prev.secondary_color,
+        accent_color: tenant.accent_color || prev.accent_color,
+        custom_domain: tenant.custom_domain || prev.custom_domain
+      }));
+    }
+  }, [tenant]);
+
+  const BRANDING_PRESETS = [
+    {
+      name: 'Nexa Deep Sapphire',
+      primary_color: '#1E3A8A',
+      secondary_color: '#0D9488',
+      accent_color: '#F59E0B'
+    },
+    {
+      name: 'Apex Royal Indigo',
+      primary_color: '#312E81',
+      secondary_color: '#0284C7',
+      accent_color: '#F97316'
+    },
+    {
+      name: 'Emerald STEM Academy',
+      primary_color: '#064E3B',
+      secondary_color: '#059669',
+      accent_color: '#10B981'
+    },
+    {
+      name: 'Crimson Tech Leadership',
+      primary_color: '#881337',
+      secondary_color: '#E11D48',
+      accent_color: '#EAB308'
+    },
+    {
+      name: 'Obsidian & Cyan NextGen',
+      primary_color: '#0F172A',
+      secondary_color: '#0891B2',
+      accent_color: '#38BDF8'
+    }
+  ];
+
+  const handleApplyPresetTheme = (preset) => {
+    setBrandingForm(prev => ({
+      ...prev,
+      primary_color: preset.primary_color,
+      secondary_color: preset.secondary_color,
+      accent_color: preset.accent_color
+    }));
+    showToast(`Applied preset palette: ${preset.name}`);
+  };
+
+  const handleSaveBranding = async (e) => {
+    e.preventDefault();
+    setBrandingSaving(true);
+    try {
+      const res = await updateBranding(brandingForm);
+      if (res?.success) {
+        showToast('✓ Corporate white-label branding updated and applied live across all portals!');
+        logAuditAction('CONFIG_CHANGE', `Updated institutional branding: ${brandingForm.name}`, currentAdmin?.name || 'Super Admin', 'Branding & White-Labeling');
+      } else {
+        alert(`Branding Update Error: ${res?.error || 'Failed to save branding'}`);
+      }
+    } catch (err) {
+      alert(`Branding Update Error: ${err.message}`);
+    } finally {
+      setBrandingSaving(false);
+    }
+  };
+
+  const handleResetBranding = async () => {
+    if (window.confirm('Reset all institutional branding to default Nexa Transform Academy themes?')) {
+      setBrandingSaving(true);
+      try {
+        await resetBranding();
+        setBrandingForm({
+          name: 'Nexa Transform Academy',
+          institution_tagline: 'Future-Proof Your Skills',
+          logo_url: '/images/logo.png',
+          primary_color: '#1E3A8A',
+          secondary_color: '#0D9488',
+          accent_color: '#F59E0B',
+          custom_domain: ''
+        });
+        showToast('✓ Branding reset to default Nexa Academy themes.');
+      } catch (err) {
+        alert(`Failed to reset branding: ${err.message}`);
+      } finally {
+        setBrandingSaving(false);
+      }
+    }
+  };
 
   const [showLecturerForm, setShowLecturerForm] = useState(false);
   const [lecturerForm, setLecturerForm] = useState({
@@ -2091,6 +2201,7 @@ export const AdminPortal = () => {
     { id: 'compliance',   label: 'Compliance',    icon: <IcoShield size={16} />, roles: ['Super Admin', 'Quality Assurance Officer'] },
     { id: 'certificates', label: 'Certificates',  icon: <IcoAward size={16} />, roles: ['Super Admin', 'Academic Registrar', 'Quality Assurance Officer'] },
     { id: 'audits',       label: 'Audit Trail',   icon: <IcoShield size={16} />, roles: ['Super Admin', 'Quality Assurance Officer', 'Academic Registrar', 'Finance Officer'] },
+    { id: 'branding',     label: 'Corporate Branding', icon: <IcoSparkles size={16} />, roles: ['Super Admin'] },
     { id: 'staff',        label: 'Admin Staff',   icon: <IcoUser size={16} />,  roles: ['Super Admin'] },
   ];
   const tabs = ALL_TABS.filter(t => t.roles.some(r => normalizeAdminRole(r) === currentRole));
@@ -2114,9 +2225,13 @@ export const AdminPortal = () => {
       <div className="lmis-login-overlay">
         <div className="lmis-login-bg" />
         <div className="lmis-login-card">
-          <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          {tenant?.logo_url ? (
+            <img src={tenant.logo_url} alt={tenant.name} className="lmis-login-logo" style={{ maxHeight: '48px', objectFit: 'contain', margin: '0 auto 1rem', display: 'block' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+          ) : (
+            <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          )}
           <h2 className="lmis-login-title">Admin Portal</h2>
-          <p className="lmis-login-sub">NexaTransform Hub LMIS</p>
+          <p className="lmis-login-sub">{tenant?.name || 'NexaTransform Hub LMIS'}</p>
           <p className="lmis-login-role">Sign in with your administrator credentials</p>
           {sessionExpiredNotice && (
             <div style={{
@@ -5633,6 +5748,353 @@ export const AdminPortal = () => {
               >
                 ✓ Complete Import of {csvPreviewRows.filter(r => !r.isDuplicate).length} Learners
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CORPORATE WHITE-LABELING & BRANDING TAB (Super Admin Only) */}
+      {activeTab === 'branding' && (
+        <div className="branding-tab-container">
+          <div className="lmis-page-header flex-between" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <span className="badge badge-teal" style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.65rem' }}>White-Labeling Engine</span>
+                <span className="badge badge-gold" style={{ fontSize: '0.65rem' }}>Tier: {tenant?.plan_code?.toUpperCase() || 'PRO PLUS'}</span>
+              </div>
+              <h1 className="lmis-page-title">Corporate White-Labeling &amp; Brand Identity</h1>
+              <p className="lmis-page-sub">Customize institutional logos, corporate color tokens, and custom domains applied dynamically across all student and staff portals.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <a
+                href={`/lmis/learner?tenant=${tenant?.slug || 'nexa'}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-sm btn-outline"
+                style={{ fontSize: '0.78rem' }}
+              >
+                👁️ Preview Learner Portal ↗
+              </a>
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                onClick={handleResetBranding}
+                disabled={brandingSaving}
+                style={{ fontSize: '0.78rem' }}
+              >
+                ↺ Reset to Defaults
+              </button>
+            </div>
+          </div>
+
+          {/* PRESET PALETTES */}
+          <div className="lmis-card mb-4" style={{ padding: '1.25rem', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+            <div style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)', display: 'block' }}>Corporate Palette Presets</strong>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-sub)' }}>Click any preset to instantly apply curated WCAG-compliant enterprise color themes.</span>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.75rem' }}>
+              {BRANDING_PRESETS.map(preset => {
+                const isSelected = brandingForm.primary_color === preset.primary_color && brandingForm.accent_color === preset.accent_color;
+                return (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => handleApplyPresetTheme(preset)}
+                    style={{
+                      background: isSelected ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+                      border: isSelected ? '2px solid var(--gold)' : '1px solid var(--border-color)',
+                      borderRadius: '10px',
+                      padding: '0.75rem',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: preset.primary_color, border: '1px solid rgba(0,0,0,0.1)' }} title="Primary Color" />
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: preset.secondary_color, border: '1px solid rgba(0,0,0,0.1)' }} title="Secondary Color" />
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: preset.accent_color, border: '1px solid rgba(0,0,0,0.1)' }} title="Accent Color" />
+                      {isSelected && <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 800 }}>✓ Active</span>}
+                    </div>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)' }}>{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+            {/* BRANDING FORM */}
+            <form onSubmit={handleSaveBranding} className="lmis-card" style={{ padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <IcoEdit size={16} /> Institutional Brand Settings
+              </h2>
+
+              <div className="lmis-form-group" style={{ marginBottom: '1rem' }}>
+                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'block' }}>
+                  Institution / Organization Name
+                </label>
+                <input
+                  type="text"
+                  className="lmis-form-input"
+                  value={brandingForm.name}
+                  onChange={e => setBrandingForm({ ...brandingForm, name: e.target.value })}
+                  placeholder="e.g. Apex Technical Academy"
+                  required
+                />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', display: 'block' }}>
+                  Replaces "Nexa Transform Academy" across all navigation bars, certificates, and student portals.
+                </span>
+              </div>
+
+              <div className="lmis-form-group" style={{ marginBottom: '1rem' }}>
+                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'block' }}>
+                  Institutional Tagline / Motto
+                </label>
+                <input
+                  type="text"
+                  className="lmis-form-input"
+                  value={brandingForm.institution_tagline}
+                  onChange={e => setBrandingForm({ ...brandingForm, institution_tagline: e.target.value })}
+                  placeholder="e.g. Empowering Next-Generation Professionals"
+                />
+              </div>
+
+              <div className="lmis-form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'block' }}>
+                  Institutional Logo URL
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="lmis-form-input"
+                    value={brandingForm.logo_url}
+                    onChange={e => setBrandingForm({ ...brandingForm, logo_url: e.target.value })}
+                    placeholder="/images/logo.png or https://..."
+                    required
+                  />
+                  {brandingForm.logo_url && (
+                    <div style={{ width: '42px', height: '42px', flexShrink: 0, background: '#0F172A', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', border: '1px solid var(--border-color)' }}>
+                      <img src={brandingForm.logo_url} alt="Logo Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+                    </div>
+                  )}
+                </div>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginTop: '0.2rem', display: 'block' }}>
+                  SVG or high-res transparent PNG recommended.
+                </span>
+              </div>
+
+              {/* COLOR TOKENS */}
+              <div style={{ background: 'var(--bg-card-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
+                <strong style={{ fontSize: '0.82rem', color: 'var(--text-main)', display: 'block', marginBottom: '0.75rem' }}>
+                  🎨 Dynamic Portal Theme Tokens
+                </strong>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem' }}>Primary</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <input
+                        type="color"
+                        value={brandingForm.primary_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, primary_color: e.target.value })}
+                        style={{ width: '32px', height: '32px', padding: 0, border: 'none', borderRadius: '6px', cursor: 'pointer', background: 'none' }}
+                      />
+                      <input
+                        type="text"
+                        className="lmis-form-input"
+                        value={brandingForm.primary_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, primary_color: e.target.value })}
+                        style={{ fontSize: '0.72rem', padding: '0.3rem', height: '32px', fontFamily: 'monospace' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem' }}>Secondary</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <input
+                        type="color"
+                        value={brandingForm.secondary_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, secondary_color: e.target.value })}
+                        style={{ width: '32px', height: '32px', padding: 0, border: 'none', borderRadius: '6px', cursor: 'pointer', background: 'none' }}
+                      />
+                      <input
+                        type="text"
+                        className="lmis-form-input"
+                        value={brandingForm.secondary_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, secondary_color: e.target.value })}
+                        style={{ fontSize: '0.72rem', padding: '0.3rem', height: '32px', fontFamily: 'monospace' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem' }}>Accent</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <input
+                        type="color"
+                        value={brandingForm.accent_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, accent_color: e.target.value })}
+                        style={{ width: '32px', height: '32px', padding: 0, border: 'none', borderRadius: '6px', cursor: 'pointer', background: 'none' }}
+                      />
+                      <input
+                        type="text"
+                        className="lmis-form-input"
+                        value={brandingForm.accent_color}
+                        onChange={e => setBrandingForm({ ...brandingForm, accent_color: e.target.value })}
+                        style={{ fontSize: '0.72rem', padding: '0.3rem', height: '32px', fontFamily: 'monospace' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CUSTOM DOMAIN */}
+              <div className="lmis-form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'block' }}>
+                  Custom Vanity Domain / CNAME
+                </label>
+                <input
+                  type="text"
+                  className="lmis-form-input"
+                  value={brandingForm.custom_domain}
+                  onChange={e => setBrandingForm({ ...brandingForm, custom_domain: e.target.value })}
+                  placeholder="e.g. lmis.apexacademy.co.za"
+                />
+                <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-sub)', background: 'rgba(56, 189, 248, 0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                  🌐 <strong>DNS Instruction:</strong> Point a CNAME record from your DNS registrar to <code>cname.nexa-transform.com</code>. Once propagated, learners access your white-labeled portal under your own web domain.
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="submit"
+                  className="btn btn-sm btn-gold"
+                  disabled={brandingSaving}
+                  style={{ fontWeight: 800, padding: '0.6rem 1.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  {brandingSaving ? 'Applying Changes...' : '✓ Save & Apply Brand Live'}
+                </button>
+              </div>
+            </form>
+
+            {/* LIVE PREVIEW CANVAS */}
+            <div className="lmis-card" style={{ padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', position: 'sticky', top: '80px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <IcoEye size={16} /> Live Portal Theme Preview
+                </strong>
+                <span className="badge badge-teal" style={{ fontSize: '0.65rem' }}>Real-Time Render</span>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '1rem' }}>
+                Here is how your custom colors and institutional identity render across navigation bars and portal controls:
+              </p>
+
+              {/* MOCK PORTAL HEADER */}
+              <div style={{
+                background: brandingForm.primary_color,
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: `2px solid ${brandingForm.accent_color}`,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <img
+                    src={brandingForm.logo_url || '/logo.svg'}
+                    alt="Logo"
+                    style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                    onError={e => { e.currentTarget.src = '/logo.svg'; }}
+                  />
+                  <span style={{
+                    color: brandingForm.accent_color,
+                    fontWeight: 800,
+                    fontSize: '0.78rem',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'monospace'
+                  }}>
+                    {brandingForm.name || 'Your Academy'}
+                  </span>
+                </div>
+                <div style={{
+                  background: brandingForm.secondary_color,
+                  color: '#FFFFFF',
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '999px',
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase'
+                }}>
+                  Learner Portal
+                </div>
+              </div>
+
+              {/* MOCK SIDEBAR ITEM & BUTTONS */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'var(--bg-card-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: brandingForm.accent_color,
+                  borderLeft: `3px solid ${brandingForm.accent_color}`,
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span>📚 Active Academic Modules</span>
+                  <span style={{ marginLeft: 'auto', background: brandingForm.accent_color, color: '#000', borderRadius: '999px', padding: '0.1rem 0.4rem', fontSize: '0.65rem', fontWeight: 800 }}>8</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    style={{
+                      background: brandingForm.accent_color,
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '0.4rem 0.9rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Enroll Now
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none',
+                      border: `1px solid ${brandingForm.secondary_color}`,
+                      color: brandingForm.secondary_color,
+                      borderRadius: '6px',
+                      padding: '0.4rem 0.9rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View Timetable
+                  </button>
+                </div>
+
+                <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '0.5rem', fontSize: '0.72rem', color: 'var(--text-sub)' }}>
+                  <strong>Motto:</strong> <em>"{brandingForm.institution_tagline || 'Excellence in Education'}"</em>
+                </div>
+              </div>
             </div>
           </div>
         </div>

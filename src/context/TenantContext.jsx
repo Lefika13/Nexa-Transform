@@ -54,10 +54,32 @@ export const TenantProvider = ({ children }) => {
     return 'nexa';
   };
 
+  const applyCssVariables = (t) => {
+    if (typeof document !== 'undefined') {
+      const primary = t.primary_color || DEFAULT_NEXA_BRANDING.primary_color;
+      const secondary = t.secondary_color || DEFAULT_NEXA_BRANDING.secondary_color;
+      const accent = t.accent_color || DEFAULT_NEXA_BRANDING.accent_color;
+
+      document.documentElement.style.setProperty('--tenant-primary', primary);
+      document.documentElement.style.setProperty('--tenant-secondary', secondary);
+      document.documentElement.style.setProperty('--tenant-accent', accent);
+      document.documentElement.style.setProperty('--color-tenant-primary', primary);
+      document.documentElement.style.setProperty('--color-tenant-secondary', secondary);
+      document.documentElement.style.setProperty('--color-tenant-accent', accent);
+    }
+  };
+
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
       const slug = resolveTenantSlug();
+
+      // Check for locally cached override (useful for immediate demo persistence & offline)
+      let cachedOverride = null;
+      try {
+        const raw = localStorage.getItem(`nexa_tenant_branding_${slug}`);
+        if (raw) cachedOverride = JSON.parse(raw);
+      } catch (_) {}
 
       // Query organisations table
       const { data, error } = await supabase
@@ -85,12 +107,12 @@ export const TenantProvider = ({ children }) => {
         .maybeSingle();
 
       if (data && !error) {
-        const branding = data.branding_config || {};
+        const branding = { ...(data.branding_config || {}), ...(cachedOverride || {}) };
         const resolvedTenant = {
           id: data.id,
-          name: data.name || DEFAULT_NEXA_BRANDING.name,
+          name: cachedOverride?.name || data.name || DEFAULT_NEXA_BRANDING.name,
           slug: data.slug,
-          custom_domain: data.custom_domain,
+          custom_domain: cachedOverride?.custom_domain || data.custom_domain,
           status: data.status,
           is_suspended: Boolean(data.is_suspended),
           suspension_reason: data.suspension_reason,
@@ -104,19 +126,12 @@ export const TenantProvider = ({ children }) => {
         };
 
         setTenant(resolvedTenant);
-
-        // Inject dynamic theme tokens into root document
-        if (typeof document !== 'undefined') {
-          document.documentElement.style.setProperty('--tenant-primary', resolvedTenant.primary_color);
-          document.documentElement.style.setProperty('--tenant-secondary', resolvedTenant.secondary_color);
-          document.documentElement.style.setProperty('--tenant-accent', resolvedTenant.accent_color);
-        }
+        applyCssVariables(resolvedTenant);
       } else {
-        // Fallback to default Nexa Academy
-        setTenant({
-          ...DEFAULT_NEXA_BRANDING,
-          id: DEFAULT_TENANT_ID
-        });
+        // Fallback to default Nexa Academy or cached demo override
+        const fallback = cachedOverride ? { ...DEFAULT_NEXA_BRANDING, ...cachedOverride, id: DEFAULT_TENANT_ID } : { ...DEFAULT_NEXA_BRANDING, id: DEFAULT_TENANT_ID };
+        setTenant(fallback);
+        applyCssVariables(fallback);
       }
     } catch (err) {
       console.error('Failed to resolve tenant configuration:', err);
@@ -124,6 +139,7 @@ export const TenantProvider = ({ children }) => {
         ...DEFAULT_NEXA_BRANDING,
         id: DEFAULT_TENANT_ID
       });
+      applyCssVariables(DEFAULT_NEXA_BRANDING);
     } finally {
       setLoading(false);
     }
@@ -132,6 +148,97 @@ export const TenantProvider = ({ children }) => {
   useEffect(() => {
     fetchTenantDetails();
   }, []);
+
+  // Update branding method for Tenant Admins
+  const updateBranding = async (newBranding) => {
+    try {
+      const updatedTenant = {
+        ...tenant,
+        name: newBranding.name || tenant.name,
+        logo_url: newBranding.logo_url !== undefined ? newBranding.logo_url : tenant.logo_url,
+        primary_color: newBranding.primary_color || tenant.primary_color,
+        secondary_color: newBranding.secondary_color || tenant.secondary_color,
+        accent_color: newBranding.accent_color || tenant.accent_color,
+        institution_tagline: newBranding.institution_tagline !== undefined ? newBranding.institution_tagline : tenant.institution_tagline,
+        custom_domain: newBranding.custom_domain !== undefined ? newBranding.custom_domain : tenant.custom_domain
+      };
+
+      setTenant(updatedTenant);
+      applyCssVariables(updatedTenant);
+
+      // Persist in localStorage for instant reload & demo persistence
+      try {
+        localStorage.setItem(`nexa_tenant_branding_${tenant.slug || 'nexa'}`, JSON.stringify({
+          name: updatedTenant.name,
+          logo_url: updatedTenant.logo_url,
+          primary_color: updatedTenant.primary_color,
+          secondary_color: updatedTenant.secondary_color,
+          accent_color: updatedTenant.accent_color,
+          institution_tagline: updatedTenant.institution_tagline,
+          custom_domain: updatedTenant.custom_domain
+        }));
+      } catch (_) {}
+
+      // Update in Supabase if tenant id exists and is not demo-only
+      if (tenant.id && tenant.id !== DEFAULT_TENANT_ID) {
+        await supabase
+          .from('organisations')
+          .update({
+            name: updatedTenant.name,
+            custom_domain: updatedTenant.custom_domain,
+            branding_config: {
+              logo_url: updatedTenant.logo_url,
+              primary_color: updatedTenant.primary_color,
+              secondary_color: updatedTenant.secondary_color,
+              accent_color: updatedTenant.accent_color,
+              institution_tagline: updatedTenant.institution_tagline
+            }
+          })
+          .eq('id', tenant.id);
+      }
+
+      return { success: true, tenant: updatedTenant };
+    } catch (err) {
+      console.error('Error updating tenant branding:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Reset branding to default Nexa Academy styling
+  const resetBranding = async () => {
+    try {
+      const reset = {
+        ...DEFAULT_NEXA_BRANDING,
+        id: tenant.id || DEFAULT_TENANT_ID,
+        slug: tenant.slug || 'nexa'
+      };
+      setTenant(reset);
+      applyCssVariables(reset);
+
+      try {
+        localStorage.removeItem(`nexa_tenant_branding_${tenant.slug || 'nexa'}`);
+      } catch (_) {}
+
+      if (tenant.id && tenant.id !== DEFAULT_TENANT_ID) {
+        await supabase
+          .from('organisations')
+          .update({
+            name: DEFAULT_NEXA_BRANDING.name,
+            branding_config: {
+              logo_url: DEFAULT_NEXA_BRANDING.logo_url,
+              primary_color: DEFAULT_NEXA_BRANDING.primary_color,
+              secondary_color: DEFAULT_NEXA_BRANDING.secondary_color,
+              accent_color: DEFAULT_NEXA_BRANDING.accent_color,
+              institution_tagline: DEFAULT_NEXA_BRANDING.institution_tagline
+            }
+          })
+          .eq('id', tenant.id);
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
 
   // Method to allow admins or demo switchers to change tenant context
   const switchTenant = (newSlug) => {
@@ -174,7 +281,7 @@ export const TenantProvider = ({ children }) => {
   }
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, switchTenant, refreshTenant: fetchTenantDetails }}>
+    <TenantContext.Provider value={{ tenant, loading, switchTenant, refreshTenant: fetchTenantDetails, updateBranding, resetBranding }}>
       {children}
     </TenantContext.Provider>
   );
@@ -187,7 +294,9 @@ export const useTenant = () => {
       tenant: DEFAULT_NEXA_BRANDING,
       loading: false,
       switchTenant: () => {},
-      refreshTenant: () => {}
+      refreshTenant: () => {},
+      updateBranding: async () => ({ success: true }),
+      resetBranding: async () => ({ success: true })
     };
   }
   return context;

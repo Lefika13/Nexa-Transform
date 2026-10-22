@@ -24,6 +24,7 @@ import {
 } from '../utils/emailNotifier';
 import { calculateModuleAcademicRecord, ACADEMIC_CONSTANTS } from '../utils/gradeCalculations';
 import { LmisCalendarSchedule } from '../components/shared/LmisCalendarSchedule';
+import { useTenant } from '../context/TenantContext';
 import { getPortalSession, setPortalSession, clearPortalSession, useSessionInactivity } from '../utils/sessionManager';
 import './LmisCommon.css';
 
@@ -74,14 +75,21 @@ const toDatetimeLocal = (isoString) => {
 /* ── Shell (reuse same structure) ───────────── */
 function LmisShell({ role, children, activeTab, onTabChange, tabs = [], mobileBottomTabs = [], onLogout }) {
   const [open, setOpen] = useState(false);
+  const { tenant } = useTenant();
   return (
     <div className="lmis-shell">
       <div className="lmis-watermark" />
       <header className="lmis-header">
         <div className="lmis-header-left">
           <button className="lmis-menu-toggle lmis-mobile-menu-btn" onClick={() => setOpen(true)}><IcoMenu size={20} /></button>
-          <Link to="/lmis"><img src="/logo.svg" alt="NX" className="lmis-header-logo" /></Link>
-          <span className="lmis-header-title">LMIS</span>
+          <Link to="/lmis" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            {tenant?.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.name} className="lmis-header-logo" style={{ maxHeight: '28px', objectFit: 'contain' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+            ) : (
+              <img src="/logo.svg" alt="NX" className="lmis-header-logo" />
+            )}
+            <span className="lmis-header-title">{tenant?.name ? (tenant.slug === 'nexa' ? 'LMIS' : tenant.name) : 'LMIS'}</span>
+          </Link>
         </div>
         <div className="lmis-header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <ThemeToggle />
@@ -154,6 +162,8 @@ export const LecturerPortal = () => {
     updateRecord,
     deleteRecord
   } = useData();
+
+  const { tenant } = useTenant();
 
   /* ── Auth ─────────────────────────────── */
   /* ── Auth State with Persistent Session & Inactivity Expiry ──── */
@@ -1535,9 +1545,18 @@ export const LecturerPortal = () => {
       <div className="lmis-login-overlay">
         <div className="lmis-login-bg" />
         <div className="lmis-login-card">
-          <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          {tenant?.logo_url ? (
+            <img src={tenant.logo_url} alt={tenant.name} className="lmis-login-logo" style={{ maxHeight: '48px', objectFit: 'contain', margin: '0 auto 1rem', display: 'block' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+          ) : (
+            <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          )}
           <h2 className="lmis-login-title">Lecturer Portal</h2>
-          <p className="lmis-login-sub">NexaTransform Hub LMIS</p>
+          <p className="lmis-login-sub">{tenant?.name || 'NexaTransform Hub LMIS'}</p>
+          {tenant?.institution_tagline && (
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-sub)', fontStyle: 'italic', marginBottom: '0.75rem', textAlign: 'center' }}>
+              "{tenant.institution_tagline}"
+            </p>
+          )}
 
           {sessionExpiredNotice && (
             <div style={{

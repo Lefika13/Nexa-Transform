@@ -23,6 +23,7 @@ import { generateCompletionCertificatePDF } from '../utils/completionCertificate
 import { calculateModuleAcademicRecord, calculateProgrammeAcademicStanding, ACADEMIC_CONSTANTS } from '../utils/gradeCalculations';
 import { isDeliverableEmail, safeSupabasePasswordReset } from '../utils/emailValidator';
 import { LmisCalendarSchedule } from '../components/shared/LmisCalendarSchedule';
+import { useTenant } from '../context/TenantContext';
 import { getPortalSession, setPortalSession, clearPortalSession, useSessionInactivity } from '../utils/sessionManager';
 import './LmisCommon.css';
 
@@ -56,6 +57,7 @@ const IcoPlay    = (p) => <Icon d="M5 3l14 9-14 9V3z" {...p}/>;
 function LmisShell({ role, userName, children, activeTab, onTabChange, tabs, mobileBottomTabs, onRefresh, syncStatus, onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const { tenant } = useTenant();
 
   const handleManualSync = async () => {
     setSyncing(true);
@@ -73,10 +75,14 @@ function LmisShell({ role, userName, children, activeTab, onTabChange, tabs, mob
           <button className="lmis-menu-toggle lmis-mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
             <IcoMenu size={20} />
           </button>
-          <Link to="/lmis">
-            <img src="/logo.svg" alt="NX" className="lmis-header-logo" />
+          <Link to="/lmis" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            {tenant?.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.name} className="lmis-header-logo" style={{ maxHeight: '28px', objectFit: 'contain' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+            ) : (
+              <img src="/logo.svg" alt="NX" className="lmis-header-logo" />
+            )}
+            <span className="lmis-header-title">{tenant?.name ? (tenant.slug === 'nexa' ? 'LMIS' : tenant.name) : 'LMIS'}</span>
           </Link>
-          <span className="lmis-header-title">LMIS</span>
         </div>
         <div className="lmis-header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <ThemeToggle />
@@ -175,6 +181,8 @@ export const LearnerPortal = () => {
     stipend_disbursements = [], institutional_banking_config = {},
     grade_appeals = [],
     createRecord, updateRecord, deleteRecord, refreshData, syncStatus, setData } = useData();
+
+  const { tenant } = useTenant();
 
   // Always-current ref so async login polling reads latest student_profiles (avoids stale closure on mobile)
   const studentProfilesRef = useRef(student_profiles);
@@ -1089,9 +1097,18 @@ export const LearnerPortal = () => {
       <div className="lmis-login-overlay">
         <div className="lmis-login-bg" />
         <div className="lmis-login-card">
-          <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          {tenant?.logo_url ? (
+            <img src={tenant.logo_url} alt={tenant.name} className="lmis-login-logo" style={{ maxHeight: '48px', objectFit: 'contain', margin: '0 auto 1rem', display: 'block' }} onError={e => { e.currentTarget.src = '/logo.svg'; }} />
+          ) : (
+            <img src="/logo.svg" alt="NX" className="lmis-login-logo" />
+          )}
           <h2 className="lmis-login-title">Learner Portal</h2>
-          <p className="lmis-login-sub">NexaTransform Hub LMIS</p>
+          <p className="lmis-login-sub">{tenant?.name || 'NexaTransform Hub LMIS'}</p>
+          {tenant?.institution_tagline && (
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-sub)', fontStyle: 'italic', marginBottom: '0.75rem', textAlign: 'center' }}>
+              "{tenant.institution_tagline}"
+            </p>
+          )}
 
           {sessionExpiredNotice && (
             <div style={{

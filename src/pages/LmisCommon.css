@@ -347,19 +347,19 @@ img { max-width: 100%; display: block; }
 /* ─── LMIS Header ───────────────────────────── */
 .lmis-header {
   position: sticky; top: 0; z-index: 200;
-  height: var(--header-h); background: var(--navy-brand);
-  border-bottom: 1px solid rgba(212,175,55,0.25);
+  height: var(--header-h); background: var(--tenant-primary, var(--navy-brand));
+  border-bottom: 2px solid var(--tenant-accent, rgba(212,175,55,0.25));
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.25rem;
   box-shadow: 0 2px 20px rgba(0,0,0,0.3);
 }
 .lmis-header-left { display: flex; align-items: center; gap: 0.75rem; }
 .lmis-header-logo { width: 30px; height: 30px; }
-.lmis-header-title { font-size: 0.75rem; font-weight: 700; color: var(--gold); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
+.lmis-header-title { font-size: 0.75rem; font-weight: 700; color: var(--tenant-accent, var(--gold)); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase; }
 .lmis-header-right { display: flex; align-items: center; gap: 0.75rem; }
 .lmis-role-badge {
-  background: var(--gold-dim); border: 1px solid var(--gold-border);
-  color: var(--gold); font-size: 0.65rem; font-weight: 700;
+  background: var(--tenant-secondary, var(--gold-dim)); border: 1px solid var(--tenant-accent, var(--gold-border));
+  color: #FFFFFF; font-size: 0.65rem; font-weight: 700;
   padding: 0.25rem 0.7rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.06em;
 }
 .lmis-user-name { font-size: 0.8rem; font-weight: 600; color: var(--white); }
@@ -378,7 +378,7 @@ img { max-width: 100%; display: block; }
 
 /* ─── Sidebar ───────────────────────────────── */
 .lmis-sidebar {
-  width: var(--sidebar-w); background: var(--navy-brand);
+  width: var(--sidebar-w); background: var(--tenant-primary, var(--navy-brand));
   color: #FFFFFF; flex-shrink: 0;
   display: flex; flex-direction: column;
   border-right: 1px solid rgba(255,255,255,0.06);
@@ -394,7 +394,7 @@ img { max-width: 100%; display: block; }
 }
 .lmis-sidebar-mobile {
   position: fixed; top: var(--header-h); left: 0; bottom: 0;
-  width: 260px; background: var(--navy-brand);
+  width: 260px; background: var(--tenant-primary, var(--navy-brand));
   z-index: 160; transform: translateX(-100%);
   transition: transform 0.3s ease;
   overflow-y: auto; border-right: 1px solid rgba(255,255,255,0.1);
@@ -418,8 +418,8 @@ img { max-width: 100%; display: block; }
 }
 .lmis-nav-item:hover { background: rgba(255,255,255,0.06); color: var(--white); }
 .lmis-nav-item.active {
-  background: var(--gold-dim); color: var(--gold); font-weight: 700;
-  border-left: 3px solid var(--gold); padding-left: calc(0.75rem - 3px);
+  background: rgba(255, 255, 255, 0.1); color: var(--tenant-accent, var(--gold)); font-weight: 700;
+  border-left: 3px solid var(--tenant-accent, var(--gold)); padding-left: calc(0.75rem - 3px);
 }
 .lmis-nav-badge {
   margin-left: auto; min-width: 20px; height: 20px;
