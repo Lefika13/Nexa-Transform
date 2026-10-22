@@ -43,14 +43,10 @@ describe('Nexa Multi-Tenant Platform Admin Console', () => {
     // Multi-tenant Directory
     expect(html).toContain('Institutional Tenant Directory');
     expect(html).toContain('Nexa Transform Academy');
-    expect(html).toContain('Apex Skills Development Institute');
-    expect(html).toContain('Vanguard Technical TVET Consortium');
-    expect(html).toContain('Ubuntu Healthcare Training Academy');
+    expect(html).toContain('lefika6613@gmail.com');
 
     // Subscription Tiers
     expect(html).toContain('Growth Provider');
-    expect(html).toContain('Pro+ Plan');
-    expect(html).toContain('Starter Academy');
 
     // Master Kill-Switch
     expect(html).toContain('Kill-Switch');

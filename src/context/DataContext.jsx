@@ -43,8 +43,8 @@ const DEFAULT_DATA = {
     category: m.category,
     credits: m.credits,
     description: m.description,
-    lecturer_email: m.code === 'OD' ? 'lfk6613@gmail.com' : (m.code === 'BPM' ? 'bpm@nexa-transform.com' : (m.code === 'ADS' ? 'ads@nexa-transform.com' : '')),
-    lecturer_name: m.code === 'OD' ? 'Mr. Lefika Molefe' : (m.code === 'BPM' ? 'Mr. Mbongeni Ntuli' : (m.code === 'ADS' ? 'Mr. Tshepo Tseko Mofokeng' : '')),
+    lecturer_email: m.code === 'OD' ? 'lfk6613@gmail.com' : '',
+    lecturer_name: m.code === 'OD' ? 'Mr. Lefika Molefe' : '',
     status: 'Active'
   })),
   enrollments: [],
@@ -73,29 +73,6 @@ const DEFAULT_DATA = {
       title: 'Mr.',
       academic_role: 'Lead Facilitator',
       status: 'Active'
-    },
-    {
-      id: 'LEC-1790783865208',
-      staff_number: 'NX-FAC-2026-9032',
-      name: 'Mr. Mbongeni Ntuli',
-      email: 'bpm@nexa-transform.com',
-      phone: '0735949952',
-      department: 'Business Process Management',
-      title: 'Mr.',
-      academic_role: 'Lecturer',
-      status: 'Active'
-    },
-    {
-      id: 'LEC-1790949084420',
-      staff_number: 'NX-FAC-2026-9120',
-      name: 'Mr. Tshepo Tseko Mofokeng',
-      email: 'ads@nexa-transform.com',
-      phone: '0815250278',
-      department: 'Applied Digital Skills and Enterprise Web Management',
-      title: 'Mr.',
-      academic_role: 'Lead Facilitator',
-      highest_qualification: "Bachelor's Degree",
-      status: 'Active'
     }
   ],
   system_admins: [
@@ -106,50 +83,6 @@ const DEFAULT_DATA = {
       phone: '0825030483',
       role: 'Super Admin',
       password: 'NexaAdmin#2026',
-      temp_password: 'NexaAdmin#2026',
-      status: 'Active',
-      created_at: '2026-09-01'
-    },
-    {
-      id: 'ADM-FIN-001',
-      name: 'Nexa Finance Officer',
-      email: 'finance@nexa-transform.com',
-      phone: '+27 11 987 6543',
-      role: 'Finance Officer',
-      password: 'NexaFin#2026',
-      temp_password: 'NexaAdmin#2026',
-      status: 'Active',
-      created_at: '2026-09-01'
-    },
-    {
-      id: 'ADM-FIN-002',
-      name: 'Finance Department',
-      email: 'finance@nexatransform.co.za',
-      phone: '+27 11 987 6544',
-      role: 'Finance Officer',
-      password: 'NexaFin#2026',
-      temp_password: 'NexaAdmin#2026',
-      status: 'Active',
-      created_at: '2026-09-01'
-    },
-    {
-      id: 'ADM-REG-001',
-      name: 'Academic Registrar',
-      email: 'registrar@nexa-transform.com',
-      phone: '+27 11 987 6545',
-      role: 'Academic Registrar',
-      password: 'NexaReg#2026',
-      temp_password: 'NexaAdmin#2026',
-      status: 'Active',
-      created_at: '2026-09-01'
-    },
-    {
-      id: 'ADM-QA-001',
-      name: 'Quality Assurance Officer',
-      email: 'quality@nexa-transform.com',
-      phone: '+27 11 987 6546',
-      role: 'Quality Assurance Officer',
-      password: 'NexaQA#2026',
       temp_password: 'NexaAdmin#2026',
       status: 'Active',
       created_at: '2026-09-01'
@@ -186,7 +119,7 @@ const DEFAULT_DATA = {
       name: 'Nexa Skills Academy',
       institution_type: 'skills_academy',
       subdomain: 'skills',
-      contact_email: 'admin@nexa-transform.com',
+      contact_email: 'lefika6613@gmail.com',
       contact_phone: '+27 82 000 0000',
       province: 'Gauteng',
       status: 'active',
@@ -720,27 +653,22 @@ export function sanitizeData(raw) {
       const list = (Array.isArray(raw.system_lecturers) && raw.system_lecturers.length > 0)
         ? raw.system_lecturers
         : (DEFAULT_DATA.system_lecturers || []);
-      // Filter out any mock lecturers
+      // Filter out any mock lecturers or obsolete placeholders
       const filtered = list.filter(l => {
         const em = (l.email || '').toLowerCase().trim();
-        return !em.includes('@nexatransform.co.za') && !em.includes('example.com') && !em.includes('test.com') && !em.includes('dummy.com');
+        return em !== 'bpm@nexa-transform.com' &&
+          em !== 'ads@nexa-transform.com' &&
+          !em.includes('@nexatransform.co.za') &&
+          !em.includes('example.com') &&
+          !em.includes('test.com') &&
+          !em.includes('dummy.com');
       });
       const hasLefika = filtered.some(l => (l.email || '').toLowerCase().trim() === 'lfk6613@gmail.com');
-      const hasMbongeni = filtered.some(l => (l.email || '').toLowerCase().trim() === 'bpm@nexa-transform.com');
-      const hasTshepo = filtered.some(l => (l.email || '').toLowerCase().trim() === 'ads@nexa-transform.com');
       const defaults = DEFAULT_DATA.system_lecturers || [];
       const result = [...filtered];
       if (!hasLefika) {
         const defLef = defaults.find(l => l.email === 'lfk6613@gmail.com');
         if (defLef) result.unshift(defLef);
-      }
-      if (!hasMbongeni) {
-        const defMbo = defaults.find(l => l.email === 'bpm@nexa-transform.com');
-        if (defMbo) result.push(defMbo);
-      }
-      if (!hasTshepo) {
-        const defTshepo = defaults.find(l => l.email === 'ads@nexa-transform.com');
-        if (defTshepo) result.push(defTshepo);
       }
       return result;
     })(),
@@ -749,6 +677,25 @@ export function sanitizeData(raw) {
         ? raw.system_admins
         : (DEFAULT_DATA.system_admins || []);
       
+      // Filter out all legacy placeholder emails across the platform
+      const LEGACY_PLACEHOLDERS = new Set([
+        'admin@nexa-transform.com',
+        'finance@nexa-transform.com',
+        'finance@nexatransform.co.za',
+        'registrar@nexa-transform.com',
+        'quality@nexa-transform.com',
+        'quality@nexatransform.co.za',
+        'registrar@nexatransform.co.za',
+        'admin@nexatransform.co.za',
+        'enquiries@nexa-transform.com',
+        'admissions@nexa-transform.com'
+      ]);
+
+      list = list.filter(a => {
+        const em = (a.email || '').toLowerCase().trim();
+        return em && !LEGACY_PLACEHOLDERS.has(em);
+      });
+
       // Normalize roles so variations like "Finance Admin" become "Finance Officer"
       list = list.map(a => {
         const r = (a.role || '').toLowerCase();
@@ -764,7 +711,7 @@ export function sanitizeData(raw) {
         return a;
       });
 
-      // Ensure default institutional accounts are present if missing
+      // Ensure default institutional account (lefika6613@gmail.com) is present
       const defaults = DEFAULT_DATA.system_admins || [];
       defaults.forEach(def => {
         const exists = list.some(a => (a.email || '').toLowerCase().trim() === def.email.toLowerCase().trim());

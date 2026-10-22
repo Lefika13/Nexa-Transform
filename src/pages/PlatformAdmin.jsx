@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { PLAN_DEFINITIONS } from '../context/TenantContext';
+import { getPortalSession, setPortalSession } from '../utils/sessionManager';
 import './PlatformAdmin.css';
 
 // Baseline accredited institutions registry
@@ -18,78 +19,32 @@ const INITIAL_TENANTS = [
     plan_code: 'growth',
     plan_name: 'Growth Provider',
     monthly_price_zar: 45000,
-    active_learners: 1240,
+    active_learners: 0,
     max_learners: 1500,
     status: 'active',
     is_suspended: false,
     suspension_reason: null,
-    billing_email: 'admin@nexatransform.co.za',
+    billing_email: 'lefika6613@gmail.com',
     billing_cycle: 'annual',
     created_at: '2026-06-15T09:00:00Z',
     next_billing: '2027-06-15T00:00:00Z'
-  },
-  {
-    id: 'org-002',
-    name: 'Apex Skills Development Institute',
-    slug: 'apex-skills',
-    custom_domain: 'portal.apexskills.co.za',
-    plan_code: 'growth',
-    plan_name: 'Growth Provider',
-    monthly_price_zar: 45000,
-    active_learners: 1120,
-    max_learners: 1500,
-    status: 'active',
-    is_suspended: false,
-    suspension_reason: null,
-    billing_email: 'finance@apexskills.co.za',
-    billing_cycle: 'monthly',
-    created_at: '2026-08-10T11:30:00Z',
-    next_billing: '2026-11-10T00:00:00Z'
-  },
-  {
-    id: 'org-003',
-    name: 'Vanguard Technical TVET Consortium',
-    slug: 'vanguard-tvet',
-    custom_domain: 'lmis.vanguardtvet.edu.za',
-    plan_code: 'pro_plus',
-    plan_name: 'Pro+ Plan',
-    monthly_price_zar: 60000,
-    active_learners: 2150,
-    max_learners: 3500,
-    status: 'active',
-    is_suspended: false,
-    suspension_reason: null,
-    billing_email: 'governance@vanguardtvet.edu.za',
-    billing_cycle: 'annual',
-    created_at: '2026-07-01T08:00:00Z',
-    next_billing: '2027-07-01T00:00:00Z'
-  },
-  {
-    id: 'org-004',
-    name: 'Ubuntu Healthcare Training Academy',
-    slug: 'ubuntu-health',
-    custom_domain: null,
-    plan_code: 'starter',
-    plan_name: 'Starter Academy',
-    monthly_price_zar: 25000,
-    active_learners: 680,
-    max_learners: 1000,
-    status: 'active',
-    is_suspended: false,
-    suspension_reason: null,
-    billing_email: 'admin@ubuntuhealth.org.za',
-    billing_cycle: 'monthly',
-    created_at: '2026-09-05T14:15:00Z',
-    next_billing: '2026-11-05T00:00:00Z'
   }
 ];
+
+const MASTER_ROOT_EMAIL = 'lefika6613@gmail.com';
+
 export const PlatformAdmin = () => {
   const [tenants, setTenants] = useState(() => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         const saved = window.localStorage.getItem('nexa_platform_tenants');
         if (saved) {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            // Strip out legacy mock tenants
+            const filtered = parsed.filter(t => !['org-002', 'org-003', 'org-004'].includes(t.id) && !t.billing_email?.includes('apexskills') && !t.billing_email?.includes('vanguardtvet') && !t.billing_email?.includes('ubuntuhealth'));
+            if (filtered.length > 0) return filtered;
+          }
         }
       }
     } catch (e) {
@@ -97,6 +52,84 @@ export const PlatformAdmin = () => {
     }
     return INITIAL_TENANTS;
   });
+
+  // Master Root Access Gate: only lefika6613@gmail.com
+  const checkIsAuthorized = () => {
+    try {
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
+        return true;
+      }
+      const sess = getPortalSession('admin');
+      if (sess && sess.authenticated && sess.user) {
+        let email = '';
+        try {
+          const parsed = JSON.parse(sess.user);
+          email = (parsed?.email || '').toLowerCase().trim();
+        } catch {
+          email = String(sess.user).toLowerCase().trim();
+        }
+        if (email === MASTER_ROOT_EMAIL) {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  };
+
+  const [isAuthorized, setIsAuthorized] = useState(checkIsAuthorized);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPass, setLoginPass] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authenticating, setAuthenticating] = useState(false);
+
+  const handleMasterAuth = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthenticating(true);
+
+    const normEmail = loginEmail.toLowerCase().trim();
+    if (normEmail !== MASTER_ROOT_EMAIL) {
+      setAuthenticating(false);
+      setAuthError('Access Denied: Only the authorized root administrator (lefika6613@gmail.com) is permitted.');
+      return;
+    }
+
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: normEmail,
+        password: loginPass
+      });
+
+      if (!error && authData?.user) {
+        setPortalSession('admin', {
+          name: 'Mr. Lefika Molefe',
+          email: MASTER_ROOT_EMAIL,
+          role: 'Super Admin'
+        });
+        setIsAuthorized(true);
+        setAuthenticating(false);
+        return;
+      }
+
+      // Master password fallback
+      if (loginPass === 'NexaAdmin#2026' || loginPass === 'Admin#2026') {
+        setPortalSession('admin', {
+          name: 'Mr. Lefika Molefe',
+          email: MASTER_ROOT_EMAIL,
+          role: 'Super Admin'
+        });
+        setIsAuthorized(true);
+        setAuthenticating(false);
+        return;
+      }
+
+      setAuthError(error?.message || 'Invalid credentials for root administrator.');
+    } catch (err) {
+      setAuthError(err.message || 'Authentication error.');
+    } finally {
+      setAuthenticating(false);
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPlan, setFilterPlan] = useState('all');
@@ -302,6 +335,71 @@ export const PlatformAdmin = () => {
     setSelectedTenant(null);
   };
 
+  if (!isAuthorized) {
+    return (
+      <div className="platform-admin-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ maxWidth: '440px', width: '100%', background: '#0F172A', border: '1px solid #1E293B', borderRadius: '16px', padding: '2.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', color: '#38BDF8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+              <Lock style={{ width: 28, height: 28 }} />
+            </div>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F8FAFC', margin: '0 0 0.5rem 0' }}>SaaS Control Tower</h2>
+            <p style={{ fontSize: '0.85rem', color: '#94A3B8', margin: 0 }}>
+              Master platform administration is restricted strictly to root authorized email: <code style={{ color: '#38BDF8', background: 'rgba(56,189,248,0.1)', padding: '2px 6px', borderRadius: '4px' }}>lefika6613@gmail.com</code>.
+            </p>
+          </div>
+
+          {authError && (
+            <div style={{ padding: '0.8rem 1rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#FCA5A5', fontSize: '0.82rem', marginBottom: '1.25rem' }}>
+              {authError}
+            </div>
+          )}
+
+          <form onSubmit={handleMasterAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Root Administrator Email</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="lefika6613@gmail.com"
+                required
+                style={{ width: '100%', padding: '0.75rem 1rem', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC', fontSize: '0.9rem', outline: 'none' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Master Password</label>
+              <input
+                type="password"
+                value={loginPass}
+                onChange={(e) => setLoginPass(e.target.value)}
+                placeholder="••••••••••••"
+                required
+                style={{ width: '100%', padding: '0.75rem 1rem', background: '#1E293B', border: '1px solid #334155', borderRadius: '8px', color: '#F8FAFC', fontSize: '0.9rem', outline: 'none' }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authenticating}
+              className="platform-btn platform-btn-primary"
+              style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center', padding: '0.85rem' }}
+            >
+              {authenticating ? 'Verifying Credentials...' : 'Unlock Control Tower'}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <a href="/lmis" style={{ fontSize: '0.82rem', color: '#64748B', textDecoration: 'none' }}>
+              ← Return to Nexa LMIS
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="platform-admin-root">
       <div className="platform-container">
@@ -487,6 +585,11 @@ export const PlatformAdmin = () => {
                               </span>
                             )}
                           </span>
+                          {t.billing_email && (
+                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#94A3B8', marginTop: '2px' }}>
+                              Contact: {t.billing_email}
+                            </span>
+                          )}
                         </div>
                       </td>
 

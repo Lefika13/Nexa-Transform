@@ -1003,9 +1003,9 @@ export const LearnerPortal = () => {
   const handleSendMsg = (e) => {
     e.preventDefault();
     const recipientMap = {
-      'Administration': 'admin@nexa-transform.com',
-      'Finance Office': 'finance@nexa-transform.com',
-      'Student Support': 'support@nexa-transform.com',
+      'Administration': 'lefika6613@gmail.com',
+      'Finance Office': 'lefika6613@gmail.com',
+      'Student Support': 'lefika6613@gmail.com',
     };
     createRecord('messages', {
       sender_email: activeEmail, sender_name: myProfile?.learner_name || 'Learner',

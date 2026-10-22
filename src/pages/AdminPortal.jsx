@@ -93,17 +93,6 @@ const ADMIN_ROLES = [
   'Accountant'
 ];
 const AUTHORIZED_ADMIN_EMAILS = [
-  'admin@nexa-transform.com',
-  'enquiries@nexa-transform.com',
-  'admissions@nexa-transform.com',
-  'registrar@nexa-transform.com',
-  'finance@nexa-transform.com',
-  'quality@nexa-transform.com',
-  'lefika@nexa-transform.com',
-  'admin@nexatransform.co.za',
-  'registrar@nexatransform.co.za',
-  'finance@nexatransform.co.za',
-  'quality@nexatransform.co.za',
   'lefika6613@gmail.com'
 ];
 
@@ -366,13 +355,8 @@ export const AdminPortal = () => {
         || (AUTHORIZED_ADMIN_EMAILS.includes(emailInput) ? 'Super Admin' : null);
       
       // If user is recognized root admin email, ensure role is at least Super Admin
-      if ((emailInput === 'admin@nexa-transform.com' || emailInput === 'lefika@nexa-transform.com' || emailInput === 'lefika6613@gmail.com') && (!userRole || userRole === 'Learner' || userRole === 'Lecturer')) {
+      if (emailInput === 'lefika6613@gmail.com' && (!userRole || userRole === 'Learner' || userRole === 'Lecturer')) {
         userRole = 'Super Admin';
-      }
-
-      // If user is a finance account, assign Finance Officer
-      if ((emailInput.includes('finance') || emailInput === 'finance@nexa-transform.com' || emailInput === 'finance@nexatransform.co.za') && emailInput !== 'admin@nexa-transform.com' && emailInput !== 'lefika6613@gmail.com') {
-        userRole = 'Finance Officer';
       }
 
       // Always normalize role
@@ -394,7 +378,7 @@ export const AdminPortal = () => {
 
       const adminName = authUser?.user_metadata?.name 
         || adminRecord?.name 
-        || (userRole === 'Finance Officer' ? 'Finance Officer' : ((emailInput === 'admin@nexa-transform.com' || emailInput === 'lefika@nexa-transform.com' || emailInput === 'lefika6613@gmail.com') ? 'Mr. Lefika Molefe' : emailInput.split('@')[0]));
+        || (emailInput === 'lefika6613@gmail.com' ? 'Mr. Lefika Molefe' : emailInput.split('@')[0]);
 
       const adminObj = {
         name: adminName,
