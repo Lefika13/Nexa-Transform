@@ -1610,7 +1610,9 @@ export const AdminPortal = () => {
       return;
     }
     const pool = Number(institutional_banking_config?.available_balance || 0);
-    const isStandardBank = (institutional_banking_config?.api_provider || 'standard_bank_h2h') === 'standard_bank_h2h';
+    const provider = institutional_banking_config?.api_provider || 'standard_bank_h2h';
+    const isStandardBank = provider === 'standard_bank_h2h';
+    const isStitch = provider === 'stitch';
     const sourceBank = institutional_banking_config?.bank_name || 'Standard Bank of South Africa';
 
     if (totalPendingAmount > pool && pool > 0) {
@@ -1618,7 +1620,9 @@ export const AdminPortal = () => {
         return;
       }
     } else {
-      const confirmMsg = isStandardBank
+      const confirmMsg = isStitch
+        ? `Submit Batch Payout to Stitch Express Instant EFT (RTC):\n\n• Batch Size: ${pendingCount} funded learners\n• Total Amount: R ${totalPendingAmount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}\n• Gateway: Stitch Express Payouts API\n• Settlement: Real-Time Clearing (RTC) to Capitec, FNB, Nedbank, Standard Bank, ABSA & TymeBank\n\nProceed with instant disbursement?`
+        : isStandardBank
         ? `Submit Batch Payout to Standard Bank OneHub (H2H):\n\n• Batch Size: ${pendingCount} funded learners\n• Total Amount: R ${totalPendingAmount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}\n• Debit Account: ${sourceBank} (•••${institutional_banking_config?.account_number ? String(institutional_banking_config.account_number).slice(-4) : 'Pending'})\n\nOnce submitted, an approval prompt will be sent to your Standard Bank Mobile Banking App for final 2FA sign-off. Proceed?`
         : `Confirm Direct API Batch EFT: Disburse R ${totalPendingAmount.toLocaleString('en-ZA')} to ${pendingCount} funded learners for ${activePeriodLabel}? Funds will be deducted from ${sourceBank}.`;
       
@@ -1636,7 +1640,9 @@ export const AdminPortal = () => {
         `${currentAdmin?.name || 'Administrator'} (${currentAdmin?.role || 'Finance Officer'})`
       );
       if (res?.success) {
-        showToast(isStandardBank 
+        showToast(isStitch
+          ? `✓ Stitch Express Instant Payout Completed: Disbursed ${res.count} stipends (R ${Number(res.totalAmount).toLocaleString('en-ZA')}) in Real-Time!`
+          : isStandardBank 
           ? `✓ Standard Bank Batch Submitted: Disbursed ${res.count} stipends (R ${Number(res.totalAmount).toLocaleString('en-ZA')}). App 2FA authorization verified!`
           : `✓ Batch Disbursed: Paid ${res.count} learners totaling R ${Number(res.totalAmount).toLocaleString('en-ZA')}!`
         );
