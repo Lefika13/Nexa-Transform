@@ -1,8 +1,19 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { PlatformAdmin } from '../PlatformAdmin';
+
+vi.mock('../../supabaseClient', () => ({
+  supabase: {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null, count: 0 }),
+      update: () => ({
+        eq: () => Promise.resolve({ data: null, error: null })
+      })
+    })
+  }
+}));
 
 describe('Nexa Multi-Tenant Platform Admin Console', () => {
   beforeEach(() => {

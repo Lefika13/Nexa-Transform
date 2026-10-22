@@ -4,14 +4,16 @@ import {
   Activity, Search, Filter, AlertTriangle, CheckCircle2,
   RefreshCw, PowerOff, ArrowUpRight, Lock, ExternalLink
 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { PLAN_DEFINITIONS } from '../context/TenantContext';
 import './PlatformAdmin.css';
 
-// Initial Mock Tenant Registry (mirrors Supabase `organisations` & `subscriptions`)
+// Baseline accredited institutions registry
 const INITIAL_TENANTS = [
   {
-    id: 'org-001',
+    id: 'a0000000-0000-0000-0000-000000000001',
     name: 'Nexa Transform Academy',
-    slug: 'default',
+    slug: 'nexa',
     custom_domain: 'academy.nexa-transform.com',
     plan_code: 'growth',
     plan_name: 'Growth Provider',
@@ -21,7 +23,7 @@ const INITIAL_TENANTS = [
     status: 'active',
     is_suspended: false,
     suspension_reason: null,
-    billing_email: 'billing@nexa-transform.com',
+    billing_email: 'admin@nexatransform.co.za',
     billing_cycle: 'annual',
     created_at: '2026-06-15T09:00:00Z',
     next_billing: '2027-06-15T00:00:00Z'
@@ -79,27 +81,8 @@ const INITIAL_TENANTS = [
     billing_cycle: 'monthly',
     created_at: '2026-09-05T14:15:00Z',
     next_billing: '2026-11-05T00:00:00Z'
-  },
-  {
-    id: 'org-005',
-    name: 'Horizon Mining Skills Academy',
-    slug: 'horizon-mining',
-    custom_domain: 'skills.horizonmining.co.za',
-    plan_code: 'growth',
-    plan_name: 'Growth Provider',
-    monthly_price_zar: 45000,
-    active_learners: 940,
-    max_learners: 1500,
-    status: 'active',
-    is_suspended: false,
-    suspension_reason: null,
-    billing_email: 'accounts@horizonmining.co.za',
-    billing_cycle: 'annual',
-    created_at: '2026-08-20T10:00:00Z',
-    next_billing: '2027-08-20T00:00:00Z'
   }
 ];
-
 export const PlatformAdmin = () => {
   const [tenants, setTenants] = useState(() => {
     try {
@@ -137,6 +120,69 @@ export const PlatformAdmin = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // Fetch Live Organisations from Supabase
+  const fetchLiveTenants = async () => {
+    try {
+      const { data: orgs, error } = await supabase
+        .from('organisations')
+        .select(`
+          id,
+          name,
+          slug,
+          custom_domain,
+          status,
+          is_suspended,
+          suspension_reason,
+          billing_email,
+          created_at,
+          current_plan_id,
+          subscription_plans (
+            code,
+            name,
+            monthly_price_zar,
+            max_active_learners
+          )
+        `);
+
+      if (!error && Array.isArray(orgs) && orgs.length > 0) {
+        const { count: studentCount } = await supabase
+          .from('student_profiles')
+          .select('*', { count: 'exact', head: true });
+
+        const mapped = orgs.map(org => {
+          const planCode = org.subscription_plans?.code || 'growth';
+          const planDef = PLAN_DEFINITIONS[planCode] || PLAN_DEFINITIONS.growth;
+          return {
+            id: org.id,
+            name: org.name,
+            slug: org.slug,
+            custom_domain: org.custom_domain,
+            plan_code: planCode,
+            plan_name: org.subscription_plans?.name || planDef.name,
+            monthly_price_zar: org.subscription_plans?.monthly_price_zar || planDef.monthly_price_zar,
+            active_learners: studentCount || 0,
+            max_learners: org.subscription_plans?.max_active_learners || planDef.max_active_learners,
+            status: org.status || (org.is_suspended ? 'suspended' : 'active'),
+            is_suspended: Boolean(org.is_suspended),
+            suspension_reason: org.suspension_reason,
+            billing_email: org.billing_email || `admin@${org.slug}.co.za`,
+            billing_cycle: 'annual',
+            created_at: org.created_at || '2026-06-15T09:00:00Z',
+            next_billing: org.created_at ? new Date(new Date(org.created_at).setFullYear(new Date(org.created_at).getFullYear() + 1)).toISOString() : '2027-06-15T00:00:00Z'
+          };
+        });
+
+        setTenants(mapped);
+      }
+    } catch (err) {
+      console.warn('Error fetching live tenants:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveTenants();
+  }, []);
+
   useEffect(() => {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -162,27 +208,44 @@ export const PlatformAdmin = () => {
     return matchesSearch && matchesPlan && matchesStatus;
   });
 
-  // Handle Kill-Switch Action
-  const executeKillSwitch = () => {
+  // Handle Kill-Switch Action with Supabase Persistence
+  const executeKillSwitch = async () => {
     if (!selectedTenant) return;
     if (actionType === 'suspend' && !killReason.trim()) {
       alert('Please enter a mandatory audit reason for suspending this institution.');
       return;
     }
 
+    const isSuspended = actionType === 'suspend';
+    const newStatus = isSuspended ? 'suspended' : 'active';
+    const reason = isSuspended ? killReason.trim() : null;
+
     setTenants(prev => prev.map(t => {
       if (t.id === selectedTenant.id) {
         return {
           ...t,
-          is_suspended: actionType === 'suspend',
-          status: actionType === 'suspend' ? 'suspended' : 'active',
-          suspension_reason: actionType === 'suspend' ? killReason.trim() : null
+          is_suspended: isSuspended,
+          status: newStatus,
+          suspension_reason: reason
         };
       }
       return t;
     }));
 
-    showToast(actionType === 'suspend'
+    try {
+      await supabase
+        .from('organisations')
+        .update({
+          is_suspended: isSuspended,
+          status: newStatus,
+          suspension_reason: reason
+        })
+        .eq('id', selectedTenant.id);
+    } catch (e) {
+      console.warn('Supabase kill-switch update warning:', e);
+    }
+
+    showToast(isSuspended
       ? `🚨 Master Kill-Switch Executed: ${selectedTenant.name} has been suspended.`
       : `✓ Institution Reactivated: ${selectedTenant.name} is now active.`
     );
@@ -192,23 +255,14 @@ export const PlatformAdmin = () => {
     setKillReason('');
   };
 
-  // Handle Plan Override
-  const executePlanChange = () => {
+  // Handle Plan Override with Supabase Persistence
+  const executePlanChange = async () => {
     if (!selectedTenant) return;
 
-    let planName = 'Growth Provider';
-    let price = 45000;
-    let max = 1500;
-
-    if (targetPlan === 'starter') {
-      planName = 'Starter Academy';
-      price = 25000;
-      max = 1000;
-    } else if (targetPlan === 'pro_plus') {
-      planName = 'Pro+ Plan';
-      price = 60000;
-      max = 3500;
-    }
+    const planDef = PLAN_DEFINITIONS[targetPlan] || PLAN_DEFINITIONS.growth;
+    const planName = planDef.name;
+    const price = planDef.monthly_price_zar;
+    const max = planDef.max_active_learners;
 
     setTenants(prev => prev.map(t => {
       if (t.id === selectedTenant.id) {
@@ -222,6 +276,26 @@ export const PlatformAdmin = () => {
       }
       return t;
     }));
+
+    try {
+      const planIds = {
+        starter: '50a2b907-0e4a-44bf-ae18-6072b0e9a4bf',
+        growth: 'a0b5f3cb-e363-4491-b754-21de374449d5',
+        pro_plus: 'd905c94d-b688-4167-ae4b-118e619b4a1f'
+      };
+      await supabase
+        .from('organisations')
+        .update({
+          current_plan_id: planIds[targetPlan] || planIds.growth
+        })
+        .eq('id', selectedTenant.id);
+    } catch (e) {
+      console.warn('Supabase plan update warning:', e);
+    }
+
+    try {
+      localStorage.setItem('nexa_active_plan_override', targetPlan);
+    } catch (_) {}
 
     showToast(`✓ Plan Updated: ${selectedTenant.name} moved to ${planName}.`);
     setPlanModalOpen(false);

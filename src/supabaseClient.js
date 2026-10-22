@@ -10,13 +10,26 @@ const siteUrl = typeof window !== 'undefined'
   ? window.location.origin           // https://nexa-transform.com in prod, http://localhost:5173 in dev
   : 'https://nexa-transform.com';
 
+if (typeof globalThis !== 'undefined' && typeof globalThis.WebSocket === 'undefined') {
+  globalThis.WebSocket = class DummyWebSocket {
+    constructor() {}
+    addEventListener() {}
+    removeEventListener() {}
+    send() {}
+    close() {}
+  };
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     redirectTo: `${siteUrl}/auth/callback`,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,         // must be true to pick up tokens from the email link URL
+    autoRefreshToken: typeof window !== 'undefined',
+    persistSession: typeof window !== 'undefined',
+    detectSessionInUrl: typeof window !== 'undefined',
   },
+  ...(typeof window === 'undefined' && typeof globalThis.WebSocket === 'undefined'
+    ? { realtime: { createWebSocket: () => null } }
+    : {})
 });
 
 // Convenience — use this in any "Forgot password" / "Reset password" call:

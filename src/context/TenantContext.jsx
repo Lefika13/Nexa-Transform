@@ -5,6 +5,57 @@ const TenantContext = createContext(null);
 
 export const DEFAULT_TENANT_ID = 'a0000000-0000-0000-0000-000000000001';
 
+export const PLAN_DEFINITIONS = {
+  starter: {
+    code: 'starter',
+    name: 'Starter Academy',
+    monthly_price_zar: 25000,
+    annual_price_zar: 255000,
+    max_active_learners: 1000,
+    max_facilitators: 10,
+    max_admin_seats: 3,
+    allow_custom_domain: false,
+    allow_stipend_payout_api: false, // NO direct stipend payouts from LMIS
+    allow_stipend_batch_eft: true,   // Bank Batch EFT Exporter enabled
+    allow_maker_checker: true,
+    allow_seta_poe_exporter: false,  // Individual PoE only
+    allow_multi_entity: false,
+    allow_custom_erp: false
+  },
+  growth: {
+    code: 'growth',
+    name: 'Growth Provider',
+    monthly_price_zar: 45000,
+    annual_price_zar: 459000,
+    max_active_learners: 1500,
+    max_facilitators: 99999, // Unlimited
+    max_admin_seats: 99999,   // Unlimited
+    allow_custom_domain: true,
+    allow_stipend_payout_api: true, // Direct Instant EFT Payouts via LMIS
+    allow_stipend_batch_eft: true,
+    allow_maker_checker: true,
+    allow_seta_poe_exporter: true,  // 1-Click Batch SETA PoE Exporter
+    allow_multi_entity: false,
+    allow_custom_erp: false
+  },
+  pro_plus: {
+    code: 'pro_plus',
+    name: 'Pro+ Plan',
+    monthly_price_zar: 60000,
+    annual_price_zar: 612000,
+    max_active_learners: 999999, // 1,500+ (Unlimited)
+    max_facilitators: 999999,    // Unlimited
+    max_admin_seats: 999999,     // Unlimited
+    allow_custom_domain: true,
+    allow_stipend_payout_api: true,
+    allow_stipend_batch_eft: true,
+    allow_maker_checker: true,
+    allow_seta_poe_exporter: true,
+    allow_multi_entity: true,    // Multi-Campus & Multi-Entity Payout Orchestration
+    allow_custom_erp: true       // Custom ERP (SAP, Sage 300, PeopleSoft)
+  }
+};
+
 const DEFAULT_NEXA_BRANDING = {
   name: 'Nexa Transform Academy',
   slug: 'nexa',
@@ -16,7 +67,8 @@ const DEFAULT_NEXA_BRANDING = {
   institution_tagline: 'Future-Proof Your Skills',
   is_suspended: false,
   suspension_reason: null,
-  plan_code: 'pro_plus'
+  plan_code: 'growth',
+  plan: PLAN_DEFINITIONS.growth
 };
 
 export const TenantProvider = ({ children }) => {
@@ -114,8 +166,31 @@ export const TenantProvider = ({ children }) => {
         .eq('slug', slug)
         .maybeSingle();
 
+      // Check for plan override via URL query or localStorage
+      let planOverride = null;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const p = params.get('plan');
+        if (p && PLAN_DEFINITIONS[p.toLowerCase()]) {
+          planOverride = p.toLowerCase();
+          localStorage.setItem('nexa_active_plan_override', planOverride);
+        } else {
+          const stored = localStorage.getItem('nexa_active_plan_override');
+          if (stored && PLAN_DEFINITIONS[stored.toLowerCase()]) {
+            planOverride = stored.toLowerCase();
+          }
+        }
+      } catch (_) {}
+
       if (data && !error) {
         const branding = { ...(data.branding_config || {}), ...(cachedOverride || {}) };
+        const rawCode = planOverride || data.subscription_plans?.code || 'growth';
+        const effectiveCode = PLAN_DEFINITIONS[rawCode] ? rawCode : 'growth';
+        const planDetails = {
+          ...PLAN_DEFINITIONS[effectiveCode],
+          ...(data.subscription_plans || {})
+        };
+
         const resolvedTenant = {
           id: data.id,
           name: cachedOverride?.name || data.name || DEFAULT_NEXA_BRANDING.name,
@@ -129,15 +204,24 @@ export const TenantProvider = ({ children }) => {
           secondary_color: branding.secondary_color || DEFAULT_NEXA_BRANDING.secondary_color,
           accent_color: branding.accent_color || DEFAULT_NEXA_BRANDING.accent_color,
           institution_tagline: branding.institution_tagline || DEFAULT_NEXA_BRANDING.institution_tagline,
-          plan: data.subscription_plans || null,
-          plan_code: data.subscription_plans?.code || 'starter'
+          plan: planDetails,
+          plan_code: effectiveCode
         };
 
         setTenant(resolvedTenant);
         applyCssVariables(resolvedTenant);
       } else {
         // Fallback to default Nexa Academy or cached demo override
-        const fallback = cachedOverride ? { ...DEFAULT_NEXA_BRANDING, ...cachedOverride, id: DEFAULT_TENANT_ID } : { ...DEFAULT_NEXA_BRANDING, id: DEFAULT_TENANT_ID };
+        const rawCode = planOverride || 'growth';
+        const effectiveCode = PLAN_DEFINITIONS[rawCode] ? rawCode : 'growth';
+        const planDetails = PLAN_DEFINITIONS[effectiveCode];
+        const fallback = {
+          ...DEFAULT_NEXA_BRANDING,
+          ...(cachedOverride || {}),
+          id: DEFAULT_TENANT_ID,
+          plan_code: effectiveCode,
+          plan: planDetails
+        };
         setTenant(fallback);
         applyCssVariables(fallback);
       }
@@ -248,6 +332,39 @@ export const TenantProvider = ({ children }) => {
     }
   };
 
+  // Method to change subscription plan code dynamically
+  const setPlanCode = async (newCode) => {
+    if (!newCode || !PLAN_DEFINITIONS[newCode]) return { success: false, error: 'Invalid plan code' };
+    try {
+      localStorage.setItem('nexa_active_plan_override', newCode);
+      const planDetails = PLAN_DEFINITIONS[newCode];
+      const updated = {
+        ...tenant,
+        plan_code: newCode,
+        plan: planDetails
+      };
+      setTenant(updated);
+
+      // If registered organisation exists in Supabase
+      if (tenant.id && tenant.id !== DEFAULT_TENANT_ID) {
+        const planIds = {
+          starter: '50a2b907-0e4a-44bf-ae18-6072b0e9a4bf',
+          growth: 'a0b5f3cb-e363-4491-b754-21de374449d5',
+          pro_plus: 'd905c94d-b688-4167-ae4b-118e619b4a1f'
+        };
+        await supabase
+          .from('organisations')
+          .update({ current_plan_id: planIds[newCode] || planIds.growth })
+          .eq('id', tenant.id);
+      }
+
+      return { success: true, plan: planDetails };
+    } catch (err) {
+      console.warn('Error setting plan code:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   // Method to allow admins or demo switchers to change tenant context
   const switchTenant = (newSlug) => {
     if (newSlug) {
@@ -289,7 +406,7 @@ export const TenantProvider = ({ children }) => {
   }
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, switchTenant, refreshTenant: fetchTenantDetails, updateBranding, resetBranding }}>
+    <TenantContext.Provider value={{ tenant, loading, switchTenant, refreshTenant: fetchTenantDetails, updateBranding, resetBranding, setPlanCode }}>
       {children}
     </TenantContext.Provider>
   );
@@ -304,7 +421,8 @@ export const useTenant = () => {
       switchTenant: () => {},
       refreshTenant: () => {},
       updateBranding: async () => ({ success: true }),
-      resetBranding: async () => ({ success: true })
+      resetBranding: async () => ({ success: true }),
+      setPlanCode: async () => ({ success: true })
     };
   }
   return context;

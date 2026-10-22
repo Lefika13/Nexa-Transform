@@ -98,7 +98,7 @@ const AUTHORIZED_ADMIN_EMAILS = [
 function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomTabs, onRefresh, syncStatus, onLogout, onRolePreviewChange, isSuperAdminUser }) {
   const [open, setOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const { tenant } = useTenant();
+  const { tenant, setPlanCode } = useTenant();
 
   const handleManualSync = async () => {
     setSyncing(true);
@@ -123,6 +123,29 @@ function LmisShell({ role, children, activeTab, onTabChange, tabs, mobileBottomT
         </div>
         <div className="lmis-header-right" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <ThemeToggle />
+          {/* Active Subscription Package Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'var(--bg-app)', padding: '0.15rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 700, textTransform: 'uppercase' }}>Plan:</span>
+            <select
+              value={tenant?.plan_code || 'growth'}
+              onChange={e => setPlanCode && setPlanCode(e.target.value)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                color: tenant?.plan_code === 'starter' ? '#2563eb' : tenant?.plan_code === 'growth' ? 'var(--emerald)' : 'var(--gold)',
+                cursor: 'pointer',
+                padding: '0.15rem 0.25rem',
+                outline: 'none'
+              }}
+              title="Active Subscription Package: Change plan to test capability enforcement in real-time"
+            >
+              <option value="starter">Starter Academy (R 25k)</option>
+              <option value="growth">Growth Provider (R 45k)</option>
+              <option value="pro_plus">Pro+ Enterprise (R 60k)</option>
+            </select>
+          </div>
           {isSuperAdminUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'var(--bg-app)', padding: '0.15rem 0.4rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-sub)', fontWeight: 700, textTransform: 'uppercase' }}>Role:</span>
@@ -717,6 +740,12 @@ export const AdminPortal = () => {
 
   const handleRegisterLecturer = async (e) => {
     e.preventDefault();
+    const maxFacilitators = tenant?.plan?.max_facilitators || (tenant?.plan_code === 'starter' ? 10 : 99999);
+    if ((system_lecturers || []).length >= maxFacilitators) {
+      alert(`Facilitator Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) is limited to ${maxFacilitators} facilitators. Please upgrade to Growth Provider for unlimited facilitators, assessors, and moderators.`);
+      return;
+    }
+
     const cleanEmail = (lecturerForm.email || '').trim().toLowerCase();
     const fullName = (lecturerForm.name || '').trim() || `${lecturerForm.title || 'Dr.'} ${(lecturerForm.first_name || '').trim()} ${(lecturerForm.surname || '').trim()}`.trim();
     if (!cleanEmail || !fullName) {
@@ -962,6 +991,12 @@ export const AdminPortal = () => {
     e.preventDefault();
     if (!adminForm.email.trim() || !adminForm.name.trim()) return;
 
+    const maxAdmins = tenant?.plan?.max_admin_seats || (tenant?.plan_code === 'starter' ? 3 : 99999);
+    if ((system_admins || []).length >= maxAdmins) {
+      alert(`Administrator Seats Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) allows up to ${maxAdmins} administrator accounts. Please upgrade to Growth Provider for unlimited administrators.`);
+      return;
+    }
+
     const cleanEmail = adminForm.email.trim().toLowerCase();
     const fullName = adminForm.name.trim();
     const targetRole = normalizeAdminRole(adminForm.role);
@@ -1134,6 +1169,12 @@ export const AdminPortal = () => {
     const surname = (studentForm.surname || '').trim();
     const nokFirstName = (studentForm.nok_first_name || '').trim();
     const nokSurname = (studentForm.nok_surname || '').trim();
+
+    const maxLearners = tenant?.plan?.max_active_learners || (tenant?.plan_code === 'starter' ? 1000 : tenant?.plan_code === 'growth' ? 1500 : 999999);
+    if ((student_profiles || []).length >= maxLearners) {
+      alert(`Active Learner Quota Reached: Your current package (${tenant?.plan?.name || 'Starter Academy'}) is limited to ${maxLearners.toLocaleString()} active learners. Please upgrade to enroll additional learners.`);
+      return;
+    }
 
     if (!cleanId || !cleanEmail) {
       alert('Registration Error: Please provide both an ID / Passport Number and an Email Address.');
@@ -1685,6 +1726,10 @@ export const AdminPortal = () => {
 
   // Single Direct Payout Handler
   const handlePaySingleStipend = async (learner) => {
+    if (tenant?.plan_code === 'starter') {
+      alert('🔒 Direct LMIS electronic stipend payouts are excluded on Starter Academy. Starter includes the Bank Batch EFT Exporter (CSV / PAIN.001) for upload to your corporate bank portal. Upgrade to Growth Provider to enable direct instant disbursements.');
+      return;
+    }
     setPayingLearnerId(learner.id || learner.learner_email);
     try {
       const res = await disburseStipend({
@@ -1715,6 +1760,10 @@ export const AdminPortal = () => {
 
   // Batch Payout Handler
   const handleBatchPayStipends = async () => {
+    if (tenant?.plan_code === 'starter') {
+      alert('🔒 Direct LMIS electronic stipend disbursements are not permitted on the Starter Academy package. On Starter, use the Bank Batch EFT Exporter below to generate upload files for your bank portal. Upgrade to Growth Provider to disburse directly from the LMIS.');
+      return;
+    }
     if (pendingCount === 0) {
       alert(`No pending funded learners found for ${activePeriodLabel}. All eligible learners have already received their stipends.`);
       return;
@@ -4157,8 +4206,8 @@ export const AdminPortal = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <h1 className="lmis-page-title" style={{ margin: 0 }}>Learner Stipends &amp; Direct Disbursements</h1>
-                <span className="badge badge-emerald" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-                  ● Banking Gateway Active
+                <span className={`badge ${tenant?.plan_code === 'starter' ? 'badge-navy' : 'badge-emerald'}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                  {tenant?.plan_code === 'starter' ? '● Batch EFT Exporter Active (Starter)' : '● Direct Banking Gateway Active (Growth+)'}
                 </span>
               </div>
               <p className="lmis-page-sub" style={{ margin: '0.35rem 0 0 0' }}>
@@ -4184,20 +4233,20 @@ export const AdminPortal = () => {
               </button>
               <button
                 type="button"
-                className="btn btn-sm btn-gold"
-                style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 4px rgba(201, 163, 78, 0.25)' }}
+                className={`btn btn-sm ${tenant?.plan_code === 'starter' ? 'btn-ghost' : 'btn-gold'}`}
+                style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: tenant?.plan_code === 'starter' ? 'none' : '0 2px 4px rgba(201, 163, 78, 0.25)', opacity: tenant?.plan_code === 'starter' ? 0.6 : 1 }}
                 onClick={handleBatchPayStipends}
-                disabled={isBatchPaying || pendingCount === 0}
-                title="Send batch directly to Standard Bank OneHub with instant push notification to your Mobile Banking App"
+                disabled={isBatchPaying || pendingCount === 0 || tenant?.plan_code === 'starter'}
+                title={tenant?.plan_code === 'starter' ? 'Direct electronic stipend disbursements require Growth Provider or Pro+ Plan.' : 'Send batch directly to Standard Bank OneHub with instant push notification to your Mobile Banking App'}
               >
-                {isBatchPaying ? '🔄 Submitting to Standard Bank...' : `📱 Batch Disburse (App 2FA) (${pendingCount})`}
+                {tenant?.plan_code === 'starter' ? '🔒 Direct Disburse (Requires Growth)' : (isBatchPaying ? '🔄 Submitting to Standard Bank...' : `📱 Batch Disburse (App 2FA) (${pendingCount})`)}
               </button>
               <button
                 type="button"
                 className="btn btn-sm btn-primary"
                 style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#0033aa', borderColor: '#0033aa' }}
                 onClick={handleExportStandardBankBatchCsv}
-                title="Backup: Download pre-formatted batch file for manual upload to Standard Bank Business Online"
+                title="Download pre-formatted batch file for manual upload to Standard Bank Business Online"
               >
                 📥 SB Online Batch (CSV)
               </button>
@@ -4212,6 +4261,37 @@ export const AdminPortal = () => {
               </button>
             </div>
           </div>
+
+          {/* Starter Plan Guidance Banner */}
+          {tenant?.plan_code === 'starter' && (
+            <div style={{ padding: '0.85rem 1.15rem', background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: '8px', color: '#92400E', fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+              <div>
+                <strong>Starter Academy Package:</strong> Direct LMIS electronic stipend payouts are excluded on Starter. Use the <strong>SB Online Batch (CSV)</strong> or <strong>Universal Ledger</strong> exporter above to disburse through your corporate banking portal. Upgrade to <strong>Growth Provider</strong> to unlock 1-click direct disbursements.
+              </div>
+            </div>
+          )}
+
+          {/* Pro+ Multi-Campus / Multi-Entity Orchestration Banner */}
+          {tenant?.plan_code === 'pro_plus' && (
+            <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>🏛️</span>
+                <div>
+                  <strong style={{ fontSize: '0.85rem', color: '#FCD34D' }}>Pro+ Multi-Campus &amp; Multi-Entity Float Orchestration</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Autonomous settlement routing across multiple legal entities and campus accounts</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#CBD5E1', fontWeight: 600 }}>Active Entity:</span>
+                <select className="lmis-select" style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem', width: 'auto' }}>
+                  <option value="main">Campus A — Main Corporate Academy Float (Standard Bank)</option>
+                  <option value="tvet">Campus B — TVET Technical Institute (FNB Business)</option>
+                  <option value="health">Campus C — Healthcare Skills Division (Nedbank Corporate)</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Top Analytics Cards */}
           <div className="lmis-4col mb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))' }}>
@@ -4468,15 +4548,21 @@ export const AdminPortal = () => {
                           <td style={{ textAlign: 'right' }}>
                             <div style={{ display: 'inline-flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                               {isPending && (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-gold"
-                                  style={{ fontSize: '0.72rem', padding: '0.25rem 0.65rem', fontWeight: 700 }}
-                                  disabled={isCurrentlyPaying}
-                                  onClick={() => handlePaySingleStipend(learner)}
-                                >
-                                  {isCurrentlyPaying ? '💳 Transferring...' : '💳 Disburse Now'}
-                                </button>
+                                tenant?.plan_code === 'starter' ? (
+                                  <span className="badge badge-navy" style={{ fontSize: '0.72rem', padding: '0.25rem 0.5rem' }}>
+                                    Batch Exporter Only
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-gold"
+                                    style={{ fontSize: '0.72rem', padding: '0.25rem 0.65rem', fontWeight: 700 }}
+                                    disabled={isCurrentlyPaying}
+                                    onClick={() => handlePaySingleStipend(learner)}
+                                  >
+                                    {isCurrentlyPaying ? '💳 Transferring...' : '💳 Disburse Now'}
+                                  </button>
+                                )
                               )}
 
                               {isPaid && (
@@ -5958,19 +6044,30 @@ export const AdminPortal = () => {
 
               {/* CUSTOM DOMAIN */}
               <div className="lmis-form-group" style={{ marginBottom: '1.5rem' }}>
-                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'block' }}>
-                  Custom Vanity Domain / CNAME
+                <label className="lmis-form-label" style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Custom Vanity Domain / CNAME</span>
+                  {tenant?.plan_code === 'starter' && (
+                    <span className="badge badge-navy" style={{ fontSize: '0.65rem' }}>Growth &amp; Pro+ Only</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   className="lmis-form-input"
-                  value={brandingForm.custom_domain}
+                  value={tenant?.plan_code === 'starter' ? '' : brandingForm.custom_domain}
                   onChange={e => setBrandingForm({ ...brandingForm, custom_domain: e.target.value })}
-                  placeholder="e.g. lmis.apexacademy.co.za"
+                  disabled={tenant?.plan_code === 'starter'}
+                  placeholder={tenant?.plan_code === 'starter' ? '🔒 Custom vanity domains require Growth Provider or Pro+ Plan' : 'e.g. lmis.apexacademy.co.za'}
+                  style={{ opacity: tenant?.plan_code === 'starter' ? 0.6 : 1 }}
                 />
-                <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-sub)', background: 'rgba(56, 189, 248, 0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-                  🌐 <strong>DNS Instruction:</strong> Point a CNAME record from your DNS registrar to <code>cname.nexa-transform.com</code>. Once propagated, learners access your white-labeled portal under your own web domain.
-                </div>
+                {tenant?.plan_code === 'starter' ? (
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: '#92400e', background: '#fef3c7', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid #f59e0b' }}>
+                    🔒 <strong>Starter Academy Plan:</strong> Custom subdomain and vanity domain routing are excluded on Starter. Your institution accesses the portal via <code>nexa-transform.com/lmis?tenant={tenant?.slug}</code>. Upgrade to <strong>Growth Provider</strong> to configure your own custom domain (e.g. <code>academy.yourdomain.co.za</code>).
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: 'var(--text-sub)', background: 'rgba(56, 189, 248, 0.08)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    🌐 <strong>DNS Instruction:</strong> Point a CNAME record from your DNS registrar to <code>cname.nexa-transform.com</code>. Once propagated, learners access your white-labeled portal under your own web domain.
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>

@@ -56,4 +56,29 @@ describe('SaaS Pricing and Checkout Pages', () => {
     expect(html).toContain('Preferred Subdomain URL');
     expect(html).toContain('Ozow Instant EFT');
   });
+
+  it('guarantees each subscription package implements exact advertised capabilities and quotas', async () => {
+    const { PLAN_DEFINITIONS } = await import('../../context/TenantContext');
+
+    // Starter Plan
+    expect(PLAN_DEFINITIONS.starter.max_active_learners).toBe(1000);
+    expect(PLAN_DEFINITIONS.starter.max_facilitators).toBe(10);
+    expect(PLAN_DEFINITIONS.starter.max_admin_seats).toBe(3);
+    expect(PLAN_DEFINITIONS.starter.allow_stipend_payout_api).toBe(false); // No stipend payouts from LMIS
+    expect(PLAN_DEFINITIONS.starter.allow_stipend_batch_eft).toBe(true);  // Bank Batch EFT Exporter enabled
+    expect(PLAN_DEFINITIONS.starter.allow_custom_domain).toBe(false);
+
+    // Growth Plan
+    expect(PLAN_DEFINITIONS.growth.max_active_learners).toBe(1500);
+    expect(PLAN_DEFINITIONS.growth.max_facilitators).toBeGreaterThan(100); // Unlimited
+    expect(PLAN_DEFINITIONS.growth.max_admin_seats).toBeGreaterThan(100);   // Unlimited
+    expect(PLAN_DEFINITIONS.growth.allow_stipend_payout_api).toBe(true);  // Direct Instant EFT payouts
+    expect(PLAN_DEFINITIONS.growth.allow_custom_domain).toBe(true);
+    expect(PLAN_DEFINITIONS.growth.allow_seta_poe_exporter).toBe(true);
+
+    // Pro+ Plan
+    expect(PLAN_DEFINITIONS.pro_plus.max_active_learners).toBeGreaterThan(1500);
+    expect(PLAN_DEFINITIONS.pro_plus.allow_multi_entity).toBe(true);
+    expect(PLAN_DEFINITIONS.pro_plus.allow_custom_erp).toBe(true);
+  });
 });
