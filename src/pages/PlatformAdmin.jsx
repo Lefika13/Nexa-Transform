@@ -102,15 +102,15 @@ const INITIAL_TENANTS = [
 
 export const PlatformAdmin = () => {
   const [tenants, setTenants] = useState(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem('nexa_platform_tenants');
-      if (saved) {
-        try {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('nexa_platform_tenants');
+        if (saved) {
           return JSON.parse(saved);
-        } catch (e) {
-          console.warn('Failed to parse stored tenants', e);
         }
       }
+    } catch (e) {
+      console.warn('Failed to parse stored tenants', e);
     }
     return INITIAL_TENANTS;
   });
@@ -138,9 +138,11 @@ export const PlatformAdmin = () => {
   };
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('nexa_platform_tenants', JSON.stringify(tenants));
-    }
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('nexa_platform_tenants', JSON.stringify(tenants));
+      }
+    } catch (_) {}
   }, [tenants]);
 
   // Derived Metrics

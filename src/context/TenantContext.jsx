@@ -25,33 +25,41 @@ export const TenantProvider = ({ children }) => {
 
   // Helper to extract tenant slug from subdomain or URL
   const resolveTenantSlug = () => {
-    if (typeof window === 'undefined') return 'nexa';
+    try {
+      if (typeof window === 'undefined') return 'nexa';
 
-    // 1. Check query parameter e.g. ?tenant=apex
-    const params = new URLSearchParams(window.location.search);
-    const queryTenant = params.get('tenant');
-    if (queryTenant) return queryTenant.toLowerCase();
+      // 1. Check query parameter e.g. ?tenant=apex
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const queryTenant = params.get('tenant');
+        if (queryTenant) return queryTenant.toLowerCase();
+      } catch (_) {}
 
-    // 2. Check localStorage cached tenant slug
-    const cachedSlug = localStorage.getItem('nexa_active_tenant_slug');
-    if (cachedSlug) return cachedSlug.toLowerCase();
+      // 2. Check localStorage cached tenant slug
+      try {
+        const cachedSlug = localStorage.getItem('nexa_active_tenant_slug');
+        if (cachedSlug) return cachedSlug.toLowerCase();
+      } catch (_) {}
 
-    // 3. Check Subdomain (e.g. apex.nexa-transform.com or apex.localhost)
-    const hostname = window.location.hostname;
+      // 3. Check Subdomain (e.g. apex.nexa-transform.com or apex.localhost)
+      const hostname = window.location.hostname || '';
 
-    // Ignore Vercel preview deployment hostnames and localhost
-    if (hostname.includes('vercel.app') || hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Ignore Vercel preview deployment hostnames and localhost
+      if (hostname.includes('vercel.app') || hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'nexa';
+      }
+
+      const parts = hostname.split('.');
+      
+      // If not naked domain or standard root
+      if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'nexa-transform') {
+        return parts[0].toLowerCase();
+      }
+
+      return 'nexa';
+    } catch (_) {
       return 'nexa';
     }
-
-    const parts = hostname.split('.');
-    
-    // If not naked domain or standard root
-    if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'nexa-transform') {
-      return parts[0].toLowerCase();
-    }
-
-    return 'nexa';
   };
 
   const applyCssVariables = (t) => {

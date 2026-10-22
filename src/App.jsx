@@ -56,8 +56,6 @@ function App() {
                     <Route path="refunds" element={<RefundPolicy />} />
                     <Route path="verify" element={<VerifyRecord />} />
                     <Route path="verify/:id" element={<VerifyRecord />} />
-                    {/* Fallback route to prevent any white blank screen on 404 */}
-                    <Route path="*" element={<Home />} />
                   </Route>
 
                   {/* Admin Dashboard (Standalone Layout) */}
@@ -92,6 +90,9 @@ function App() {
                   {/* Supabase Auth email-link handlers */}
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+
+                  {/* Fallback route to prevent white screen on any unhandled route */}
+                  <Route path="*" element={<Home />} />
                 </Routes>
               </AnalyticsProvider>
             </Router>
