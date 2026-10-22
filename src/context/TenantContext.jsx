@@ -63,9 +63,9 @@ const DEFAULT_NEXA_BRANDING = {
   name: 'Nexa Transform Academy',
   slug: 'nexa',
   logo_url: '/images/logo.png',
-  primary_color: '#1E3A8A', // Deep Blue
-  secondary_color: '#0D9488', // Teal
-  accent_color: '#F59E0B', // Amber
+  primary_color: '#0B132B',   // Nexa Midnight Navy
+  secondary_color: '#06B6D4', // Nexa Turquoise
+  accent_color: '#D4AF37',    // Nexa Gold
   favicon_url: '/favicon.ico',
   institution_tagline: 'Future-Proof Your Skills',
   is_suspended: false,
@@ -119,9 +119,21 @@ export const TenantProvider = ({ children }) => {
 
   const applyCssVariables = (t) => {
     if (typeof document !== 'undefined') {
-      const primary = t.primary_color || DEFAULT_NEXA_BRANDING.primary_color;
-      const secondary = t.secondary_color || DEFAULT_NEXA_BRANDING.secondary_color;
-      const accent = t.accent_color || DEFAULT_NEXA_BRANDING.accent_color;
+      const isNexaInternal = !t?.slug || t.slug === 'nexa';
+      if (isNexaInternal) {
+        // Return internal LMIS strictly to Nexa's native original design system color scheme
+        document.documentElement.style.removeProperty('--tenant-primary');
+        document.documentElement.style.removeProperty('--tenant-secondary');
+        document.documentElement.style.removeProperty('--tenant-accent');
+        document.documentElement.style.removeProperty('--color-tenant-primary');
+        document.documentElement.style.removeProperty('--color-tenant-secondary');
+        document.documentElement.style.removeProperty('--color-tenant-accent');
+        return;
+      }
+
+      const primary = t?.primary_color || '#0B132B';
+      const secondary = t?.secondary_color || '#06B6D4';
+      const accent = t?.accent_color || '#D4AF37';
 
       document.documentElement.style.setProperty('--tenant-primary', primary);
       document.documentElement.style.setProperty('--tenant-secondary', secondary);
@@ -140,8 +152,12 @@ export const TenantProvider = ({ children }) => {
       // Check for locally cached override (useful for immediate demo persistence & offline)
       let cachedOverride = null;
       try {
-        const raw = localStorage.getItem(`nexa_tenant_branding_${slug}`);
-        if (raw) cachedOverride = JSON.parse(raw);
+        if (slug !== 'nexa') {
+          const raw = localStorage.getItem(`nexa_tenant_branding_${slug}`);
+          if (raw) cachedOverride = JSON.parse(raw);
+        } else {
+          localStorage.removeItem('nexa_tenant_branding_nexa');
+        }
       } catch (_) {}
 
       // Query organisations table

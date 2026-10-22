@@ -579,9 +579,9 @@ export const AdminPortal = () => {
     name: tenant?.name || 'Nexa Transform Academy',
     institution_tagline: tenant?.institution_tagline || 'Future-Proof Your Skills',
     logo_url: tenant?.logo_url || '/images/logo.png',
-    primary_color: tenant?.primary_color || '#1E3A8A',
-    secondary_color: tenant?.secondary_color || '#0D9488',
-    accent_color: tenant?.accent_color || '#F59E0B',
+    primary_color: tenant?.primary_color || '#0B132B',
+    secondary_color: tenant?.secondary_color || '#06B6D4',
+    accent_color: tenant?.accent_color || '#D4AF37',
     custom_domain: tenant?.custom_domain || ''
   });
   const [brandingSaving, setBrandingSaving] = useState(false);
@@ -603,10 +603,10 @@ export const AdminPortal = () => {
 
   const BRANDING_PRESETS = [
     {
-      name: 'Nexa Deep Sapphire',
-      primary_color: '#1E3A8A',
-      secondary_color: '#0D9488',
-      accent_color: '#F59E0B'
+      name: 'Nexa Signature Navy & Gold',
+      primary_color: '#0B132B',
+      secondary_color: '#06B6D4',
+      accent_color: '#D4AF37'
     },
     {
       name: 'Apex Royal Indigo',
@@ -671,9 +671,9 @@ export const AdminPortal = () => {
           name: 'Nexa Transform Academy',
           institution_tagline: 'Future-Proof Your Skills',
           logo_url: '/images/logo.png',
-          primary_color: '#1E3A8A',
-          secondary_color: '#0D9488',
-          accent_color: '#F59E0B',
+          primary_color: '#0B132B',
+          secondary_color: '#06B6D4',
+          accent_color: '#D4AF37',
           custom_domain: ''
         });
         showToast('✓ Branding reset to default Nexa Academy themes.');
