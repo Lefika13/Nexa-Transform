@@ -31,5 +31,6 @@ export { LmisTour } from './LmisTour';
 export { VerifyRecord } from './VerifyRecord';
 export { Pricing } from './Pricing';
 export { Checkout } from './Checkout';
+export { PlatformAdmin } from './PlatformAdmin';
 
 

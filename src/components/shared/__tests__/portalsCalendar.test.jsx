@@ -13,6 +13,7 @@ vi.mock('../../../supabaseClient', () => ({
 
 import { ThemeProvider } from '../../../context/ThemeContext';
 import { DataProvider } from '../../../context/DataContext';
+import { TenantProvider } from '../../../context/TenantContext';
 import { AdminPortal } from '../../../pages/AdminPortal';
 import { LearnerPortal } from '../../../pages/LearnerPortal';
 import { LecturerPortal } from '../../../pages/LecturerPortal';
@@ -102,7 +103,9 @@ describe('Portals with Calendar Tab', () => {
       <MemoryRouter initialEntries={['/lmis/admin?tab=calendar']}>
         <ThemeProvider>
           <DataProvider>
-            <AdminPortal />
+            <TenantProvider>
+              <AdminPortal />
+            </TenantProvider>
           </DataProvider>
         </ThemeProvider>
       </MemoryRouter>

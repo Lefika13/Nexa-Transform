@@ -15,7 +15,7 @@ import {
   Ecosystem, Resources, Insights, Contact, Admin, DeveloperDashboard,
   LearnerPortal, LecturerPortal, LecturerRegistration, AdminPortal, LmisPortal,
   ModuleDetail, PrivacyPolicy, TermsOfService,
-  InsightPost, FAQ, RefundPolicy, LmisTour, VerifyRecord, Pricing, Checkout,
+  InsightPost, FAQ, RefundPolicy, LmisTour, VerifyRecord, Pricing, Checkout, PlatformAdmin
 } from './pages';
 import AuthCallback from './pages/AuthCallback';
 import ResetPassword from './pages/ResetPassword';
@@ -63,6 +63,7 @@ function App() {
                   {/* Admin Dashboard (Standalone Layout) */}
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/dev-dashboard" element={<DeveloperDashboard />} />
+                  <Route path="/platform-admin" element={<ErrorBoundary name="PlatformAdminBoundary"><PlatformAdmin /></ErrorBoundary>} />
                   
                   {/* NexaTransform Hub LMIS Standalone Shell Routes (Skills Academy) */}
                   <Route path="/lmis" element={<LmisPortal />} />

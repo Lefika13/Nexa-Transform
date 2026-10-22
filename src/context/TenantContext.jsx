@@ -183,7 +183,12 @@ export const TenantProvider = ({ children }) => {
 export const useTenant = () => {
   const context = useContext(TenantContext);
   if (!context) {
-    throw new Error('useTenant must be used within a TenantProvider');
+    return {
+      tenant: DEFAULT_NEXA_BRANDING,
+      loading: false,
+      switchTenant: () => {},
+      refreshTenant: () => {}
+    };
   }
   return context;
 };
