@@ -7,20 +7,17 @@ const PLAN_INFO = {
   starter: {
     name: 'Starter Academy',
     monthlyPrice: 25000,
-    learners: 'Less than 1,000 Active Learners',
-    description: 'Perfect for accredited boutique academies and independent SDPs scaling their initial cohorts.'
+    learners: 'Less than 1,000 Active Learners'
   },
   growth: {
     name: 'Growth Provider',
     monthlyPrice: 45000,
-    learners: '1,000+ to 1,500 Active Learners',
-    description: 'Full white-label portal, custom domain, and automated Ozow/Stitch direct payout API integration.'
+    learners: '1,000+ to 1,500 Active Learners'
   },
   pro_plus: {
     name: 'Pro+ Plan',
     monthlyPrice: 60000,
-    learners: '1,500+ Active Learners',
-    description: 'Enterprise deployment for multi-campus TVETs and corporate learnership consortia.'
+    learners: '1,500+ Active Learners'
   }
 };
 
@@ -311,7 +308,6 @@ export const Checkout = () => {
             <div className="summary-plan-header">
               <h3 className="summary-plan-title">{plan.name}</h3>
               <span className="summary-plan-quota">{plan.learners}</span>
-              <p className="summary-plan-desc">{plan.description}</p>
             </div>
 
             <div className="summary-details-rows">

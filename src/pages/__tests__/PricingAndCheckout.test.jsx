@@ -25,15 +25,20 @@ describe('SaaS Pricing and Checkout Pages', () => {
     expect(html).toContain('1,000+ to 1,500 Active Learners');
     expect(html).toContain('1,500+ Active Learners');
 
-    // Verify "Most Popular" is removed
+    // Verify "Most Popular" and summaries are removed
     expect(html).not.toContain('Most Popular');
     expect(html).not.toContain('featured-ribbon-tag');
+    expect(html).not.toContain('Equip your academy or training center to run cohorts digitally');
 
-    // Verify capabilities heading and key capability statements
-    expect(html).toContain('What you can do directly from the LMIS:');
-    expect(html).toContain('Disburse monthly stipends to learners directly from the LMIS');
-    expect(html).toContain('Pay stipends instantly to learner bank accounts directly from the LMIS via integrated Ozow Instant EFT rails');
-    expect(html).toContain('Orchestrate multi-campus and multi-entity stipend payouts');
+    // Verify "Get Started" buttons
+    expect(html).toContain('Get Started');
+
+    // Verify key capability statements and differentiated tiers
+    expect(html).toContain('No learner stipend payouts from LMIS');
+    expect(html).toContain('Includes all benefits of Starter, plus:');
+    expect(html).toContain('Direct Learner Stipend Payouts via Instant EFT');
+    expect(html).toContain('Includes all benefits of Growth, plus:');
+    expect(html).toContain('Multi-Campus &amp; Multi-Entity Payout Orchestration');
   });
 
   it('renders Checkout page with plan information and form fields', () => {
