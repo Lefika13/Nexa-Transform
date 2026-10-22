@@ -72,6 +72,32 @@ export const Checkout = () => {
     setLoading(true);
 
     try {
+      // 1. Primary Gateway: Stitch Express Instant Pay & Card
+      try {
+        const stitchRes = await fetch('/api/stitch-create-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planCode,
+            billingCycle,
+            academyName: formData.academyName,
+            subdomainSlug: formData.subdomainSlug,
+            adminEmail: formData.adminEmail,
+            adminName: formData.adminName,
+            contactPhone: formData.contactPhone
+          })
+        });
+
+        const stitchData = await stitchRes.json();
+        if (stitchRes.ok && stitchData.paymentUrl) {
+          window.location.href = stitchData.paymentUrl;
+          return;
+        }
+      } catch (stitchErr) {
+        console.warn('Stitch Express payment init error, attempting fallback:', stitchErr);
+      }
+
+      // 2. Secondary Gateway: Ozow Instant EFT Fallback
       const response = await fetch('/api/ozow-create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,13 +146,13 @@ export const Checkout = () => {
         {/* Header */}
         <div className="checkout-header-wrap">
           <div className="checkout-badge">
-            <ShieldCheck style={{ width: 16, height: 16 }} /> Ozow Instant EFT Verified Checkout
+            <ShieldCheck style={{ width: 16, height: 16 }} /> Stitch &amp; Ozow Instant EFT Verified Checkout
           </div>
           <h1 className="checkout-title">
             Provision Your Academy Portal
           </h1>
           <p className="checkout-subtitle">
-            Instant EFT with ABSA, Capitec, FNB, Nedbank, Standard Bank, Investec &amp; TymeBank.
+            Instant EFT &amp; Card with ABSA, Capitec, FNB, Nedbank, Standard Bank, Investec &amp; TymeBank.
           </p>
         </div>
 
@@ -268,12 +294,12 @@ export const Checkout = () => {
                 {loading ? (
                   <>
                     <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />
-                    Connecting to Ozow Instant EFT...
+                    Connecting to Stitch Secure Pay...
                   </>
                 ) : (
                   <>
                     <Lock style={{ width: 18, height: 18 }} />
-                    Pay R {calculateTotal().toLocaleString()} via Ozow Instant EFT
+                    Pay R {calculateTotal().toLocaleString()} via Stitch Instant EFT &amp; Card
                   </>
                 )}
               </button>
