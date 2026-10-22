@@ -29,7 +29,7 @@ const PLANS = [
       { text: 'Includes all benefits of Starter, plus:', isIncludedHeader: true },
       { text: 'Direct Learner Stipend Payouts via Instant EFT' },
       { text: 'Custom Domain & Full White-Label Branding' },
-      { text: 'Biometric & Geo-location Attendance Verification' },
+      { text: 'Digital Attendance Tracking & Cohort Registers' },
       { text: '1-Click Batch SETA PoE Evidence ZIP Archive Exporter' },
       { text: 'Unlimited Facilitators, Assessors & Moderators' },
       { text: 'Priority 1-Hour SLA & Dedicated Account Manager' }

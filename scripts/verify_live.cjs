@@ -27,8 +27,8 @@ async function test() {
     console.log('Bundle has "What you can do directly from the LMIS":', jsRes.data.includes('What you can do directly from the LMIS:'));
     console.log('Bundle has new RCA article slug:', jsRes.data.includes('root-cause-analysis-consulting-for-organizational-leaders'));
     console.log('Bundle has RCA article title:', jsRes.data.includes('Root Cause Analysis Consulting for Organizational Leaders'));
-    console.log('Bundle has Ozow EFT payout:', jsRes.data.includes('Ozow Instant EFT rails'));
-    console.log('Bundle has Biometric check-ins:', jsRes.data.includes('biometric check-ins and geo-location before releasing stipends'));
+    console.log('Bundle has Ozow EFT payout:', jsRes.data.includes('Direct Learner Stipend Payouts via Instant EFT'));
+    console.log('Bundle has Digital Attendance:', jsRes.data.includes('Digital Attendance Tracking & Cohort Registers'));
   }
 
   // Also check custom domain cache status

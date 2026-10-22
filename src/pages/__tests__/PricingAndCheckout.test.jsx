@@ -37,6 +37,9 @@ describe('SaaS Pricing and Checkout Pages', () => {
     expect(html).toContain('No learner stipend payouts from LMIS');
     expect(html).toContain('Includes all benefits of Starter, plus:');
     expect(html).toContain('Direct Learner Stipend Payouts via Instant EFT');
+    expect(html).toContain('Digital Attendance Tracking &amp; Cohort Registers');
+    expect(html).not.toContain('Biometric');
+    expect(html).not.toContain('Geo-location');
     expect(html).toContain('Includes all benefits of Growth, plus:');
     expect(html).toContain('Multi-Campus &amp; Multi-Entity Payout Orchestration');
   });
